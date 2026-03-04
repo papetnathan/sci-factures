@@ -53,6 +53,12 @@ def get_signed_url(photo_path: str) -> Optional[str]:
     except Exception as e:
         print(f"Erreur signed URL: {e}")
         return None
+    
+def parse_float(value: str) -> Optional[float]:
+    try:
+        return float(value) if value and value.strip() else None
+    except ValueError:
+        return None
 
 # ─── Liste des factures ────────────────────────────────
 

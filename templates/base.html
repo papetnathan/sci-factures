@@ -70,5 +70,9 @@
   </main>
 
   <script src="/static/js/app.js"></script>
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="Facture agrandie" onclick="event.stopPropagation()" />
+  </div>
 </body>
 </html>

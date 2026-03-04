@@ -36,13 +36,22 @@
   </div>
 </div>
 
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start;">
+<div class="nouvelle-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start;">
 
   <!-- Photo -->
   <div>
     {% if photo_url %}
     <div style="border:1px solid var(--gray-200); border-radius:var(--radius); overflow:hidden; background:var(--gray-50);">
-      <img src="{{ photo_url }}" alt="Facture" style="width:100%; display:block; max-height:500px; object-fit:contain;" />
+      <img
+        src="{{ photo_url }}"
+        alt="Facture"
+        onclick="openLightbox(this.src)"
+        style="width:100%; display:block; max-height:500px; object-fit:contain; cursor:zoom-in;"
+      />
+      <div style="padding:10px 14px; border-top:1px solid var(--gray-100); font-size:12px; color:var(--gray-400); display:flex; align-items:center; gap:6px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Cliquez sur la photo pour l'agrandir
+      </div>
     </div>
     {% else %}
     <div style="border:1px dashed var(--gray-200); border-radius:var(--radius); padding:48px; text-align:center; color:var(--gray-400);">
