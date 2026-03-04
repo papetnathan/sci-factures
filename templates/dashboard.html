@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Vue d'ensemble — SCI Factures{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1 class="page-title">Vue d'ensemble</h1>
+    <p class="page-subtitle">Comptabilité de votre SCI</p>
+  </div>
+  <a href="/factures/nouvelle" class="btn btn-primary">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Nouvelle facture
+  </a>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Total ce mois</div>
+    <div class="kpi-value">
+      {% if total_this_month %}
+        {{ "%.2f €"|format(total_this_month) }}
+      {% else %}—{% endif %}
+    </div>
+    <div class="kpi-sub">{{ count_this_month }} facture{{ "s" if count_this_month > 1 else "" }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">À régler</div>
+    <div class="kpi-value">
+      {% if total_pending %}
+        {{ "%.2f €"|format(total_pending) }}
+      {% else %}—{% endif %}
+    </div>
+    <div class="kpi-sub">{{ count_pending }} facture{{ "s" if count_pending > 1 else "" }} en attente</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Total {{ now().year if now else "2025" }}</div>
+    <div class="kpi-value">
+      {% if total_year %}
+        {{ "%.2f €"|format(total_year) }}
+      {% else %}—{% endif %}
+    </div>
+    <div class="kpi-sub">Année en cours</div>
+  </div>
+</div>
+
+<div class="table-container">
+  <div class="table-toolbar">
+    <span style="font-size:13px; font-weight:500; color:var(--gray-700);">Dernières factures</span>
+    <a href="/factures" class="btn btn-secondary btn-sm">Voir tout</a>
+  </div>
+
+  {% if recent %}
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Fournisseur</th>
+        <th>Catégorie</th>
+        <th>Montant TTC</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in recent %}
+      <tr onclick="window.location='/factures/{{ inv.id }}'" style="cursor:pointer;">
+        <td class="td-muted">
+          {% if inv.invoice_date %}
+            {{ inv.invoice_date[8:10] }}/{{ inv.invoice_date[5:7] }}/{{ inv.invoice_date[0:4] }}
+          {% else %}—{% endif %}
+        </td>
+        <td class="td-primary">{{ inv.vendor_name }}</td>
+        <td>
+          {% if inv.category %}
+            <span class="badge badge-gray">{{ inv.category }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td class="td-amount">{{ "%.2f €"|format(inv.amount_ttc) }}</td>
+        <td>
+          {% if inv.status == "paid" %}
+            <span class="status-paid">Réglée</span>
+          {% else %}
+            <span class="status-pending">En attente</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+    <div class="empty-title">Aucune facture</div>
+    <div class="empty-desc">Ajoutez votre première facture pour commencer</div>
+    <a href="/factures/nouvelle" class="btn btn-primary btn-sm">+ Ajouter une facture</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

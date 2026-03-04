@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% set active = "factures" %}
+{% block title %}{{ invoice.vendor_name }} — SCI Factures{% endblock %}
+
+{% block content %}
+
+{% if created %}
+<div style="background:var(--green-light); border:1px solid #6EE7B7; color:#065F46; border-radius:var(--radius); padding:10px 16px; font-size:13px; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  Facture enregistrée avec succès.
+</div>
+{% endif %}
+
+{% if updated %}
+<div style="background:var(--green-light); border:1px solid #6EE7B7; color:#065F46; border-radius:var(--radius); padding:10px 16px; font-size:13px; margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  Modifications enregistrées avec succès.
+</div>
+{% endif %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1 class="page-title">{{ invoice.vendor_name }}</h1>
+    <p class="page-subtitle">
+      {% if invoice.invoice_date %}
+        {{ invoice.invoice_date[8:10] }}/{{ invoice.invoice_date[5:7] }}/{{ invoice.invoice_date[0:4] }}
+      {% endif %}
+      {% if invoice.category %} · {{ category.label }}{% endif %}
+    </p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <a href="/factures" class="btn btn-secondary">← Retour</a>
+    <form method="POST" action="/factures/{{ invoice.id }}/delete" onsubmit="return confirm('Supprimer cette facture ?')">
+      <button type="submit" class="btn btn-danger">Supprimer</button>
+    </form>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:start;">
+
+  <!-- Photo -->
+  <div>
+    {% if photo_url %}
+    <div style="border:1px solid var(--gray-200); border-radius:var(--radius); overflow:hidden; background:var(--gray-50);">
+      <img src="{{ photo_url }}" alt="Facture" style="width:100%; display:block; max-height:500px; object-fit:contain;" />
+    </div>
+    {% else %}
+    <div style="border:1px dashed var(--gray-200); border-radius:var(--radius); padding:48px; text-align:center; color:var(--gray-400);">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px; display:block;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Pas de photo
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Formulaire édition -->
+  <div>
+    <form method="POST" action="/factures/{{ invoice.id }}/edit" class="form-card">
+
+      <div class="form-section-title">Informations fournisseur</div>
+
+      <div class="form-group">
+        <label class="form-label">Nom de l'entreprise</label>
+        <input class="form-input" type="text" name="vendor_name" value="{{ invoice.vendor_name }}" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Détail <span class="optional">(optionnel)</span></label>
+        <input class="form-input" type="text" name="detail" value="{{ invoice.detail or '' }}" />
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-select" name="category">
+            <option value="">Sélectionner…</option>
+            {% for cat in categories %}
+            <option value="{{ cat.value }}" {% if invoice.category == cat.value %}selected{% endif %}>{{ cat.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" name="status">
+            <option value="pending" {% if invoice.status == "pending" %}selected{% endif %}>En attente</option>
+            <option value="paid" {% if invoice.status == "paid" %}selected{% endif %}>Réglée</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="form-section-title">Montants</div>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label class="form-label">HT (€)</label>
+          <input class="form-input" type="number" name="amount_ht" step="0.01" value="{{ invoice.amount_ht or '' }}" oninput="checkTva()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">TVA (%)</label>
+          <input class="form-input" type="number" name="tva_rate" step="0.1" value="{{ invoice.tva_rate or '' }}" oninput="checkTva()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">TTC (€)</label>
+          <input class="form-input" type="number" name="amount_ttc" step="0.01" value="{{ invoice.amount_ttc }}" required oninput="checkTva()" />
+        </div>
+      </div>
+
+      <div id="tva-alert" class="tva-alert" style="margin-top:-8px; margin-bottom:16px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Incohérence TVA détectée. Vérifiez les montants.
+      </div>
+
+      <div class="divider"></div>
+      <div class="form-section-title">Informations complémentaires</div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Date de la facture</label>
+          <input class="form-input" type="date" name="invoice_date" value="{{ invoice.invoice_date or '' }}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes <span class="optional">(optionnel)</span></label>
+          <input class="form-input" type="text" name="notes" value="{{ invoice.notes or '' }}" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:8px;">
+        Enregistrer les modifications
+      </button>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

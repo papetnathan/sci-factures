@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% set active = "nouvelle" %}
+{% block title %}Nouvelle facture — SCI Factures{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1 class="page-title">Nouvelle facture</h1>
+    <p class="page-subtitle">Importez une photo ou saisissez manuellement</p>
+  </div>
+  <a href="/factures" class="btn btn-secondary">Annuler</a>
+</div>
+
+<div class="nouvelle-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+  
+  <!-- Colonne gauche : upload -->
+  <div>
+    <div class="form-card" style="padding: 20px;">
+
+      <!-- Zone upload -->
+      <div id="upload-zone" class="upload-zone">
+        <input type="file" id="file-input" accept="image/*" capture="environment" />
+        <div id="upload-placeholder">
+          <div class="upload-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="upload-title">Glissez une photo ici</div>
+          <div class="upload-subtitle">ou appuyez pour prendre une photo</div>
+          <div class="upload-subtitle" style="margin-top:4px">JPG, PNG, WEBP — max 10 MB</div>
+        </div>
+      </div>
+
+      <!-- Preview image -->
+      <div id="upload-preview" class="upload-preview" style="display:none; margin-top:12px;">
+        <img id="preview-img" src="" alt="Aperçu facture" />
+        <button class="upload-preview-remove" onclick="removeImage()">✕ Supprimer</button>
+      </div>
+
+      <!-- Bouton analyser -->
+      <button id="btn-analyze" class="btn btn-primary" style="width:100%; margin-top:12px; justify-content:center; display:none;" onclick="analyzeImage()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Analyser avec l'IA
+      </button>
+
+      <!-- État chargement -->
+      <div id="analyzing-state" style="display:none; text-align:center; padding: 16px 0;">
+        <div class="spinner"></div>
+        <div style="font-size:13px; color:var(--gray-400); margin-top:10px;">Analyse en cours…</div>
+      </div>
+
+      <!-- Erreur extraction -->
+      <div id="extract-error" class="tva-alert" style="margin-top:12px; display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="extract-error-msg"></span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Colonne droite : formulaire -->
+  <div>
+    <form id="invoice-form" class="form-card" action="/factures" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="photo_data" id="photo-data" />
+
+      <!-- Indicateur IA -->
+      <div id="ia-badge" style="display:none; margin-bottom:16px;">
+        <span class="badge badge-blue">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Pré-rempli par l'IA — vérifiez les champs
+        </span>
+      </div>
+
+      <div class="form-section-title">Informations fournisseur</div>
+
+      <div class="form-group">
+        <label class="form-label" for="vendor_name">Nom de l'entreprise</label>
+        <input class="form-input" type="text" id="vendor_name" name="vendor_name" placeholder="Ex: Entreprise Martin" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="detail">Détail <span class="optional">(optionnel)</span></label>
+        <input class="form-input" type="text" id="detail" name="detail" placeholder="Ex: Carrelage salle de bain" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="category">Catégorie</label>
+        <select class="form-select" id="category" name="category" required>
+          <option value="">Sélectionner…</option>
+          <option value="travaux">Travaux / Rénovation</option>
+          <option value="charges">Charges courantes</option>
+          <option value="honoraires">Honoraires / Comptabilité</option>
+          <option value="assurances">Assurances</option>
+          <option value="fournitures">Fournitures</option>
+          <option value="entretien">Entretien / Maintenance</option>
+          <option value="notaire">Frais de notaire</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+      <div class="form-section-title">Montants</div>
+
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label class="form-label" for="amount_ht">Montant HT (€)</label>
+          <input class="form-input" type="number" id="amount_ht" name="amount_ht" step="0.01" min="0" placeholder="0.00" oninput="checkTva()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tva_rate">TVA (%)</label>
+          <input class="form-input" type="number" id="tva_rate" name="tva_rate" step="0.1" min="0" max="100" placeholder="20" oninput="checkTva()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="amount_ttc">Montant TTC (€)</label>
+          <input class="form-input" type="number" id="amount_ttc" name="amount_ttc" step="0.01" min="0" placeholder="0.00" required oninput="checkTva()" />
+        </div>
+      </div>
+
+      <!-- Alerte TVA -->
+      <div id="tva-alert" class="tva-alert" style="margin-top: -8px; margin-bottom: 16px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Incohérence TVA : HT × (1 + taux) ≠ TTC. Vérifiez les montants.
+      </div>
+
+      <div class="divider"></div>
+      <div class="form-section-title">Informations complémentaires</div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label" for="invoice_date">Date de la facture</label>
+          <input class="form-input" type="date" id="invoice_date" name="invoice_date" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="notes">Notes <span class="optional">(optionnel)</span></label>
+          <input class="form-input" type="text" id="notes" name="notes" placeholder="Remarque éventuelle" />
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top: 8px;">
+        <button type="submit" class="btn btn-primary" style="flex:1; justify-content:center;">
+          Enregistrer la facture
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}
