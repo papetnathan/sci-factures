@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
@@ -6,9 +7,10 @@ from lib.auth import login_user, logout_user, SESSION_COOKIE
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+is_prod = os.environ.get("ENVIRONMENT") == "production"
+
 @router.get("/login")
 async def login_page(request: Request):
-    # Si déjà connecté, redirige vers dashboard
     token = request.cookies.get(SESSION_COOKIE)
     if token:
         return RedirectResponse(url="/dashboard", status_code=302)
@@ -28,10 +30,10 @@ async def login_submit(
         response.set_cookie(
             key=SESSION_COOKIE,
             value=token,
-            httponly=True,       # Inaccessible depuis JS
-            secure=True,         # HTTPS uniquement en prod
-            samesite="lax",      # Protection CSRF basique
-            max_age=60 * 60 * 24 * 7  # 7 jours
+            httponly=True,
+            secure=is_prod,
+            samesite="lax",
+            max_age=60 * 60 * 24 * 7
         )
         return response
 
@@ -48,5 +50,9 @@ async def logout(request: Request):
         logout_user(token)
 
     response = RedirectResponse(url="/login", status_code=303)
-    response.delete_cookie(SESSION_COOKIE)
+    response.delete_cookie(
+        key=SESSION_COOKIE,
+        secure=is_prod,
+        samesite="lax"
+    )
     return response
