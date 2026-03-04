@@ -43,7 +43,8 @@ def get_signed_url(photo_path: str) -> Optional[str]:
             path=photo_path,
             expires_in=3600
         )
-        # Nouvelle version retourne un objet avec attribut signedURL
+        print(f"Signed URL result: {result}")
+        print(f"Type: {type(result)}")
         if hasattr(result, 'signed_url'):
             return result.signed_url
         if isinstance(result, dict):
@@ -51,12 +52,6 @@ def get_signed_url(photo_path: str) -> Optional[str]:
         return str(result)
     except Exception as e:
         print(f"Erreur signed URL: {e}")
-        return None
-
-def parse_float(value: str) -> Optional[float]:
-    try:
-        return float(value) if value and value.strip() else None
-    except ValueError:
         return None
 
 # ─── Liste des factures ────────────────────────────────
