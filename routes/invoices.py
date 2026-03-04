@@ -43,6 +43,9 @@ def get_signed_url(photo_path: str) -> Optional[str]:
             path=photo_path,
             expires_in=3600
         )
+        print(f"DEBUG signed_url result: {result}")
+        print(f"DEBUG type: {type(result)}")
+        print(f"DEBUG dir: {[x for x in dir(result) if not x.startswith('_')]}")
         if hasattr(result, 'signed_url'):
             return result.signed_url
         if isinstance(result, dict):
