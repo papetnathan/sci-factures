@@ -43,8 +43,6 @@ def get_signed_url(photo_path: str) -> Optional[str]:
             path=photo_path,
             expires_in=3600
         )
-        print(f"Signed URL result: {result}")
-        print(f"Type: {type(result)}")
         if hasattr(result, 'signed_url'):
             return result.signed_url
         if isinstance(result, dict):

@@ -59,7 +59,7 @@ button { font-family: var(--font); cursor: pointer; }
 /* ─── Sidebar ────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
