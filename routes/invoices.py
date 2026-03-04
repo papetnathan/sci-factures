@@ -38,14 +38,19 @@ def upload_photo(photo_b64: str) -> Optional[str]:
         return None
 
 def get_signed_url(photo_path: str) -> Optional[str]:
-    """Génère une URL signée valable 1 heure pour accéder à la photo."""
     try:
         result = supabase.storage.from_(STORAGE_BUCKET).create_signed_url(
             path=photo_path,
             expires_in=3600
         )
-        return result.get("signedURL") or result.get("signed_url")
-    except Exception:
+        # Nouvelle version retourne un objet avec attribut signedURL
+        if hasattr(result, 'signed_url'):
+            return result.signed_url
+        if isinstance(result, dict):
+            return result.get("signedURL") or result.get("signed_url")
+        return str(result)
+    except Exception as e:
+        print(f"Erreur signed URL: {e}")
         return None
 
 def parse_float(value: str) -> Optional[float]:
