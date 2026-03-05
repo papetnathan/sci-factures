@@ -149,4 +149,82 @@
   </div>
 
 </div>
+
+<!-- ─── Section Règlement ─────────────────────────────── -->
+<div class="table-container" style="margin-top:24px;">
+  <div class="table-toolbar">
+    <span style="font-size:13px; font-weight:500; color:var(--gray-700);">Règlement</span>
+    {% if linked_transaction %}
+      <form method="POST" action="/factures/{{ invoice.id }}/unmatch" onsubmit="return confirm('Dissocier cette transaction ?')">
+        <button type="submit" class="btn btn-danger btn-sm">Dissocier</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if linked_transaction %}
+  <!-- Transaction déjà liée -->
+  <div style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="width:8px; height:8px; border-radius:50%; background:#10B981; flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:13px; font-weight:500; color:var(--gray-800);">{{ linked_transaction.label }}</div>
+        {% if linked_transaction.label_detail %}
+        <div style="font-size:12px; color:var(--gray-400);">{{ linked_transaction.label_detail }}</div>
+        {% endif %}
+        <div style="font-size:12px; color:var(--gray-400); margin-top:2px;">
+          {{ linked_transaction.transaction_date[8:10] }}/{{ linked_transaction.transaction_date[5:7] }}/{{ linked_transaction.transaction_date[0:4] }}
+        </div>
+      </div>
+    </div>
+    <div style="font-size:15px; font-weight:600; color:{% if linked_transaction.type == 'credit' %}#10B981{% else %}#EF4444{% endif %};">
+      {% if linked_transaction.type == 'debit' %}-{% else %}+{% endif %}{{ "%.2f €"|format(linked_transaction.amount) }}
+    </div>
+  </div>
+
+  {% elif suggested_transactions %}
+  <!-- Propositions -->
+  <div style="padding:12px 20px; font-size:12px; color:var(--gray-500); border-bottom:1px solid var(--gray-100);">
+    {{ suggested_transactions|length }} transaction{{ "s" if suggested_transactions|length > 1 else "" }} correspondante{{ "s" if suggested_transactions|length > 1 else "" }} trouvée{{ "s" if suggested_transactions|length > 1 else "" }}
+  </div>
+  {% for tx in suggested_transactions %}
+  <div style="padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--gray-100);">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="width:8px; height:8px; border-radius:50%; background:#F59E0B; flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:13px; font-weight:500; color:var(--gray-800);">{{ tx.label }}</div>
+        {% if tx.label_detail %}
+        <div style="font-size:12px; color:var(--gray-400);">{{ tx.label_detail }}</div>
+        {% endif %}
+        <div style="font-size:12px; color:var(--gray-400); margin-top:2px;">
+          {{ tx.transaction_date[8:10] }}/{{ tx.transaction_date[5:7] }}/{{ tx.transaction_date[0:4] }}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="font-size:15px; font-weight:600; color:{% if tx.type == 'credit' %}#10B981{% else %}#EF4444{% endif %};">
+        {% if tx.type == 'debit' %}-{% else %}+{% endif %}{{ "%.2f €"|format(tx.amount) }}
+      </div>
+      <form method="POST" action="/factures/{{ invoice.id }}/match">
+        <input type="hidden" name="transaction_id" value="{{ tx.id }}" />
+        <button type="submit" class="btn btn-primary btn-sm">Confirmer</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <!-- Aucune transaction trouvée -->
+  <div style="padding:32px; text-align:center; color:var(--gray-400);">
+    <div style="font-size:13px;">
+      {% if invoice.status == 'paid' %}
+        Facture réglée — aucune transaction liée.
+      {% else %}
+        Aucune transaction correspondante trouvée. Importez le relevé bancaire du mois concerné.
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
 {% endblock %}
