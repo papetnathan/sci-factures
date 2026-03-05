@@ -8,7 +8,6 @@ from routes.auth import router as auth_router
 from lib.auth import require_auth
 from routes.transactions import router as transactions_router
 
-
 app = FastAPI(title="SCI Factures")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -18,6 +17,12 @@ app.include_router(auth_router)
 app.include_router(extract_router)
 app.include_router(invoices_router)
 app.include_router(transactions_router)
+
+MOIS_FR = {
+    1: "Janvier", 2: "Février", 3: "Mars", 4: "Avril",
+    5: "Mai", 6: "Juin", 7: "Juillet", 8: "Août",
+    9: "Septembre", 10: "Octobre", 11: "Novembre", 12: "Décembre"
+}
 
 @app.get("/")
 async def root(request: Request):
@@ -41,27 +46,26 @@ async def dashboard(request: Request):
     now = date.today()
     current_month = f"{now.year}-{now.month:02d}"
 
-    invoices_this_month = [
+    achats_mois = [
         inv for inv in invoices
         if (inv.get("invoice_date") or "")[:7] == current_month
+        and inv.get("type") == "achat"
+    ]
+    ventes_mois = [
+        inv for inv in invoices
+        if (inv.get("invoice_date") or "")[:7] == current_month
+        and inv.get("type") == "vente"
     ]
 
-    total_this_month = sum(inv["amount_ttc"] for inv in invoices_this_month)
-    count_this_month = len(invoices_this_month)
-    pending = [inv for inv in invoices if inv.get("status") == "pending"]
-    total_pending = sum(inv["amount_ttc"] for inv in pending)
-    total_year = sum(
-        inv["amount_ttc"] for inv in invoices
-        if (inv.get("invoice_date") or "")[:4] == str(now.year)
-    )
+    total_achats_mois = sum(inv["amount_ttc"] or 0 for inv in achats_mois)
+    total_ventes_mois = sum(inv["amount_ttc"] or 0 for inv in ventes_mois)
+    balance_mois = total_ventes_mois - total_achats_mois
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
-        "total_this_month": total_this_month,
-        "count_this_month": count_this_month,
-        "total_pending": total_pending,
-        "count_pending": len(pending),
-        "total_year": total_year,
-        "current_year": now.year,
+        "total_achats_mois": total_achats_mois,
+        "total_ventes_mois": total_ventes_mois,
+        "balance_mois": balance_mois,
+        "current_month_label": f"{MOIS_FR[now.month]} {now.year}",
         "recent": invoices[:5],
     })

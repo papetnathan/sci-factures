@@ -11,6 +11,16 @@
   <a href="/factures" class="btn btn-secondary">Annuler</a>
 </div>
 
+<!-- Choix type -->
+<div style="display:flex; gap:8px; margin-bottom:24px;">
+  <button type="button" id="btn-achat" onclick="setType('achat')" class="btn btn-primary" style="flex:1; justify-content:center;">
+    Achat
+  </button>
+  <button type="button" id="btn-vente" onclick="setType('vente')" class="btn btn-secondary" style="flex:1; justify-content:center;">
+    Vente (loyer)
+  </button>
+</div>
+
 <div class="nouvelle-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
   
   <!-- Colonne gauche : upload -->
@@ -61,6 +71,7 @@
   <div>
     <form id="invoice-form" class="form-card" action="/factures" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="photo_data" id="photo-data" />
+      <input type="hidden" name="type" id="type-input" value="achat" />
 
       <!-- Indicateur IA -->
       <div id="ia-badge" style="display:none; margin-bottom:16px;">
@@ -86,14 +97,9 @@
         <label class="form-label" for="category">Catégorie</label>
         <select class="form-select" id="category" name="category" required>
           <option value="">Sélectionner…</option>
-          <option value="travaux">Travaux / Rénovation</option>
-          <option value="charges">Charges courantes</option>
-          <option value="honoraires">Honoraires / Comptabilité</option>
-          <option value="assurances">Assurances</option>
-          <option value="fournitures">Fournitures</option>
-          <option value="entretien">Entretien / Maintenance</option>
-          <option value="notaire">Frais de notaire</option>
-          <option value="autre">Autre</option>
+          {% for cat in categories %}
+          <option value="{{ cat.value }}">{{ cat.label }}</option>
+          {% endfor %}
         </select>
       </div>
 

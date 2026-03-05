@@ -6,6 +6,7 @@ CATEGORIES = [
     {"value": "fournitures", "label": "Fournitures", "color": "#C0625A"},
     {"value": "entretien", "label": "Entretien / Maintenance", "color": "#D4843E"},
     {"value": "notaire", "label": "Frais de notaire", "color": "#5A7A8A"},
+    {"value": "loyer", "label": "Loyer", "color": "#3B82F6"},
     {"value": "autre", "label": "Autre", "color": "#8B8FA0"},
 ]
 

@@ -230,3 +230,21 @@ async function importPdf() {
     btn.textContent = 'Importer';
   }
 }
+
+// ─── Type achat/vente ──────────────────────────────────
+function setType(type) {
+  document.getElementById('type-input').value = type;
+  if (type === 'achat') {
+    document.getElementById('btn-achat').className = 'btn btn-primary';
+    document.getElementById('btn-vente').className = 'btn btn-secondary';
+    // Réinitialise la catégorie
+    const cat = document.getElementById('category');
+    if (cat && cat.value === 'loyer') cat.value = '';
+  } else {
+    document.getElementById('btn-achat').className = 'btn btn-secondary';
+    document.getElementById('btn-vente').className = 'btn btn-primary';
+    // Pré-sélectionne loyer
+    const cat = document.getElementById('category');
+    if (cat) cat.value = 'loyer';
+  }
+}

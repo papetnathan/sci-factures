@@ -16,31 +16,25 @@
 
 <div class="kpi-grid">
   <div class="kpi-card">
-    <div class="kpi-label">Total ce mois</div>
-    <div class="kpi-value">
-      {% if total_this_month %}
-        {{ "%.2f €"|format(total_this_month) }}
-      {% else %}—{% endif %}
+    <div class="kpi-label">Achats {{ current_month_label }}</div>
+    <div class="kpi-value" style="color:#EF4444;">
+      {% if total_achats_mois %}{{ "%.2f €"|format(total_achats_mois) }}{% else %}—{% endif %}
     </div>
-    <div class="kpi-sub">{{ count_this_month }} facture{{ "s" if count_this_month > 1 else "" }}</div>
+    <div class="kpi-sub">Dépenses du mois</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">À régler</div>
-    <div class="kpi-value">
-      {% if total_pending %}
-        {{ "%.2f €"|format(total_pending) }}
-      {% else %}—{% endif %}
+    <div class="kpi-label">Loyers {{ current_month_label }}</div>
+    <div class="kpi-value" style="color:#10B981;">
+      {% if total_ventes_mois %}{{ "%.2f €"|format(total_ventes_mois) }}{% else %}—{% endif %}
     </div>
-    <div class="kpi-sub">{{ count_pending }} facture{{ "s" if count_pending > 1 else "" }} en attente</div>
+    <div class="kpi-sub">Encaissements du mois</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">Total {{ now().year if now else "2025" }}</div>
-    <div class="kpi-value">
-      {% if total_year %}
-        {{ "%.2f €"|format(total_year) }}
-      {% else %}—{% endif %}
+    <div class="kpi-label">Balance {{ current_month_label }}</div>
+    <div class="kpi-value" style="color:{% if balance_mois >= 0 %}#10B981{% else %}#EF4444{% endif %};">
+      {% if balance_mois %}{{ "%.2f €"|format(balance_mois) }}{% else %}—{% endif %}
     </div>
-    <div class="kpi-sub">Année en cours</div>
+    <div class="kpi-sub">Loyers − Achats</div>
   </div>
 </div>
 
@@ -56,6 +50,7 @@
       <tr>
         <th>Date</th>
         <th>Fournisseur</th>
+        <th>Type</th>
         <th>Catégorie</th>
         <th>Montant TTC</th>
         <th>Statut</th>
@@ -70,6 +65,13 @@
           {% else %}—{% endif %}
         </td>
         <td class="td-primary">{{ inv.vendor_name }}</td>
+        <td>
+          {% if inv.type == "vente" %}
+            <span class="badge" style="background:#EFF6FF; color:#3B82F6;">Vente</span>
+          {% else %}
+            <span class="badge badge-gray">Achat</span>
+          {% endif %}
+        </td>
         <td>
           {% if inv.category %}
             <span class="badge badge-gray">{{ inv.category }}</span>

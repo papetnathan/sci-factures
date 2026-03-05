@@ -46,7 +46,7 @@ def parse_float(value: str) -> Optional[float]:
 # ─── Liste des factures ────────────────────────────────
 
 @router.get("/factures")
-async def list_factures(request: Request, category: str = "", status: str = "", q: str = ""):
+async def list_factures(request: Request, category: str = "", status: str = "", q: str = "", type: str = "achat"):
     guard = require_auth(request)
     if guard:
         return guard
@@ -57,6 +57,8 @@ async def list_factures(request: Request, category: str = "", status: str = "", 
         query = query.eq("category", category)
     if status:
         query = query.eq("status", status)
+    if type:
+        query = query.eq("type", type)
 
     result = query.execute()
     invoices = result.data or []
@@ -74,7 +76,7 @@ async def list_factures(request: Request, category: str = "", status: str = "", 
         "invoices": invoices,
         "categories": CATEGORIES,
         "total": len(invoices),
-        "filters": {"category": category, "status": status, "q": q},
+        "filters": {"category": category, "status": status, "q": q, "type": type},
     })
 
 # ─── Nouvelle facture (DOIT être avant /{invoice_id}) ──
@@ -84,7 +86,7 @@ async def nouvelle_facture(request: Request):
     guard = require_auth(request)
     if guard:
         return guard
-    return templates.TemplateResponse("nouvelle.html", {"request": request})
+    return templates.TemplateResponse("nouvelle.html", {"request": request, "categories": CATEGORIES})
 
 # ─── Créer une facture ─────────────────────────────────
 
@@ -100,6 +102,7 @@ async def create_facture(
     invoice_date: str = Form(""),
     notes: str = Form(""),
     photo_data: str = Form(""),
+    type: str = Form("achat"),
 ):
     photo_path = None
     if photo_data:
@@ -116,6 +119,7 @@ async def create_facture(
         "notes": notes.strip() or None,
         "photo_url": photo_path,
         "status": "pending",
+        "type": type,
     }
 
     result = supabase.table("invoices").insert(data).execute()
@@ -172,6 +176,7 @@ async def edit_facture(
     invoice_date: str = Form(""),
     notes: str = Form(""),
     status: str = Form("pending"),
+    type: str = Form("achat"),
 ):
     data = {
         "vendor_name": vendor_name.strip(),
@@ -183,6 +188,7 @@ async def edit_facture(
         "invoice_date": invoice_date or None,
         "notes": notes.strip() or None,
         "status": status,
+        "type": type,
     }
 
     supabase.table("invoices").update(data).eq("id", invoice_id).execute()
