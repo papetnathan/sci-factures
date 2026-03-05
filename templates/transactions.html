@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% set active = "transactions" %}
+{% block title %}Transactions — SCI Factures{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1 class="page-title">Relevés bancaires</h1>
+    <p class="page-subtitle">Fichiers importés pour le rapprochement</p>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('import-modal').style.display='flex'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Importer un relevé
+  </button>
+</div>
+
+<div class="table-container">
+  {% if imported_files %}
+  <table>
+    <thead>
+      <tr>
+        <th>Fichier</th>
+        <th>Compte</th>
+        <th>Période couverte</th>
+        <th>Transactions</th>
+        <th>Importé le</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in imported_files %}
+      <tr>
+        <td class="td-primary">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            {{ f.filename }}
+          </div>
+        </td>
+        <td class="td-muted">{{ f.account_name or "—" }}</td>
+        <td class="td-muted">
+          {% if f.date_min and f.date_max %}
+            {{ f.date_min[8:10] }}/{{ f.date_min[5:7] }}/{{ f.date_min[0:4] }}
+            →
+            {{ f.date_max[8:10] }}/{{ f.date_max[5:7] }}/{{ f.date_max[0:4] }}
+          {% else %}—{% endif %}
+        </td>
+        <td class="td-muted">{{ f.transaction_count }}</td>
+        <td class="td-muted">
+          {{ f.imported_at[8:10] }}/{{ f.imported_at[5:7] }}/{{ f.imported_at[0:4] }}
+        </td>
+        <td>
+          <form method="POST" action="/transactions/files/{{ f.id }}/delete" onsubmit="return confirm('Supprimer ce relevé et ses transactions ?')">
+            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    </div>
+    <div class="empty-title">Aucun relevé importé</div>
+    <div class="empty-desc">Importez un relevé PDF Crédit Mutuel pour commencer le rapprochement</div>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('import-modal').style.display='flex'">
+      + Importer un relevé
+    </button>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal import -->
+<div id="import-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:white; border-radius:var(--radius); padding:32px; width:100%; max-width:440px; box-shadow:0 24px 64px rgba(0,0,0,0.2);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <div style="font-size:15px; font-weight:600; color:var(--gray-900);">Importer un relevé PDF</div>
+      <button onclick="closeImportModal()" style="background:none; border:none; cursor:pointer; color:var(--gray-400); font-size:18px;">✕</button>
+    </div>
+
+    <div id="import-drop-zone"
+      style="border:2px dashed var(--gray-200); border-radius:var(--radius); padding:32px; text-align:center; cursor:pointer; margin-bottom:16px;"
+      onclick="document.getElementById('pdf-input').click()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px; display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div style="font-size:13px; font-weight:500; color:var(--gray-700);" id="import-filename">Cliquez pour sélectionner un PDF</div>
+      <div style="font-size:12px; color:var(--gray-400); margin-top:4px;">Relevé Crédit Mutuel uniquement</div>
+    </div>
+
+    <input type="file" id="pdf-input" accept=".pdf" style="display:none;" onchange="handlePdfSelect(this)" />
+
+    <div id="import-result" style="display:none; padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:16px;"></div>
+
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeImportModal()">Annuler</button>
+      <button class="btn btn-primary" id="import-btn" onclick="importPdf()" disabled>Importer</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -6,6 +6,8 @@ from routes.extract import router as extract_router
 from routes.invoices import router as invoices_router
 from routes.auth import router as auth_router
 from lib.auth import require_auth
+from routes.transactions import router as transactions_router
+
 
 app = FastAPI(title="SCI Factures")
 
@@ -15,6 +17,7 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(auth_router)
 app.include_router(extract_router)
 app.include_router(invoices_router)
+app.include_router(transactions_router)
 
 @app.get("/")
 async def root(request: Request):

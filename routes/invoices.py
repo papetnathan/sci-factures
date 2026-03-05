@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
-from lib.supabase import supabase, STORAGE_BUCKET
+from lib.supabase import supabase, STORAGE_BUCKET, get_public_url
 from lib.categories import CATEGORIES, get_category
 from lib.auth import require_auth
 from typing import Optional
@@ -37,21 +37,6 @@ def upload_photo(photo_b64: str) -> Optional[str]:
         print(f"Erreur upload photo: {e}")
         return None
 
-def get_signed_url(photo_path: str) -> Optional[str]:
-    try:
-        result = supabase.storage.from_(STORAGE_BUCKET).create_signed_url(
-            path=photo_path,
-            expires_in=3600
-        )
-        if hasattr(result, 'signed_url'):
-            return result.signed_url
-        if isinstance(result, dict):
-            return result.get("signedURL") or result.get("signed_url")
-        return str(result)
-    except Exception as e:
-        print(f"Erreur signed URL: {e}")
-        return None
-    
 def parse_float(value: str) -> Optional[float]:
     try:
         return float(value) if value and value.strip() else None
@@ -158,7 +143,7 @@ async def detail_facture(request: Request, invoice_id: str, created: str = "", u
 
     photo_url = None
     if invoice.get("photo_url"):
-        photo_url = get_signed_url(invoice["photo_url"])
+        photo_url = get_public_url(invoice["photo_url"])
 
     category = get_category(invoice.get("category") or "autre")
 

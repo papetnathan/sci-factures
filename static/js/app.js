@@ -167,3 +167,66 @@ function closeLightbox() {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox();
 });
+
+// ─── Import PDF Transactions ───────────────────────────
+let selectedPdfFile = null;
+
+function closeImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('import-filename').textContent = 'Cliquez pour sélectionner un PDF';
+  document.getElementById('import-btn').disabled = true;
+  selectedPdfFile = null;
+}
+
+function handlePdfSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  selectedPdfFile = file;
+  document.getElementById('import-filename').textContent = file.name;
+  document.getElementById('import-btn').disabled = false;
+  document.getElementById('import-result').style.display = 'none';
+}
+
+async function importPdf() {
+  if (!selectedPdfFile) return;
+
+  const btn = document.getElementById('import-btn');
+  btn.disabled = true;
+  btn.textContent = 'Import en cours...';
+
+  const formData = new FormData();
+  formData.append('file', selectedPdfFile);
+
+  try {
+    const res = await fetch('/transactions/import', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+    const resultDiv = document.getElementById('import-result');
+    resultDiv.style.display = 'block';
+
+    if (res.ok) {
+      resultDiv.style.background = 'var(--green-light)';
+      resultDiv.style.border = '1px solid #6EE7B7';
+      resultDiv.style.color = '#065F46';
+      const dateMin = data.date_min ? data.date_min.split('-').reverse().join('/') : '?';
+      const dateMax = data.date_max ? data.date_max.split('-').reverse().join('/') : '?';
+      resultDiv.textContent = `✓ ${data.inserted} transaction(s) importée(s) — période ${dateMin} → ${dateMax}`;
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      resultDiv.style.background = 'var(--red-light)';
+      resultDiv.style.border = '1px solid #FCA5A5';
+      resultDiv.style.color = '#991B1B';
+      resultDiv.textContent = `${data.detail}`;
+      btn.disabled = false;
+      btn.textContent = 'Importer';
+    }
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = 'Importer';
+  }
+}
