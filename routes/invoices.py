@@ -59,7 +59,6 @@ def find_matching_transactions(invoice: dict) -> list:
     except ValueError:
         return []
 
-    # Achat → transaction débitrice, Vente → transaction créditrice
     tx_type = "debit" if invoice_type == "achat" else "credit"
 
     result = supabase.table("bank_transactions")\
@@ -102,7 +101,6 @@ async def list_factures(request: Request, category: str = "", status: str = "", 
             or q_lower in (inv.get("detail") or "").lower()
         ]
 
-    # Pour chaque facture, récupère la transaction liée si elle existe
     tx_ids = [inv.get("transaction_id") for inv in invoices if inv.get("transaction_id")]
     transactions_map = {}
     if tx_ids:
@@ -193,14 +191,12 @@ async def detail_facture(request: Request, invoice_id: str, created: str = "", u
 
     category = get_category(invoice.get("category") or "autre")
 
-    # Transaction déjà liée
     linked_transaction = None
     if invoice.get("transaction_id"):
         tx_result = supabase.table("bank_transactions").select("*").eq("id", invoice["transaction_id"]).execute()
         if tx_result.data:
             linked_transaction = tx_result.data[0]
 
-    # Propositions de transactions si pas encore liée
     suggested_transactions = []
     if not linked_transaction and invoice.get("status") == "pending":
         suggested_transactions = find_matching_transactions(invoice)
@@ -221,13 +217,11 @@ async def detail_facture(request: Request, invoice_id: str, created: str = "", u
 
 @router.post("/factures/{invoice_id}/match")
 async def match_transaction(invoice_id: str, transaction_id: str = Form(...)):
-    # Met à jour la facture
     supabase.table("invoices").update({
         "transaction_id": transaction_id,
         "status": "paid",
     }).eq("id", invoice_id).execute()
 
-    # Marque la transaction comme rapprochée
     supabase.table("bank_transactions").update({
         "invoice_id": invoice_id,
         "matched": True,
@@ -239,7 +233,6 @@ async def match_transaction(invoice_id: str, transaction_id: str = Form(...)):
 
 @router.post("/factures/{invoice_id}/unmatch")
 async def unmatch_transaction(invoice_id: str):
-    # Récupère la transaction liée
     result = supabase.table("invoices").select("transaction_id").eq("id", invoice_id).execute()
     if result.data and result.data[0].get("transaction_id"):
         tx_id = result.data[0]["transaction_id"]
@@ -248,7 +241,6 @@ async def unmatch_transaction(invoice_id: str):
             "matched": False,
         }).eq("id", tx_id).execute()
 
-    # Remet la facture en attente
     supabase.table("invoices").update({
         "transaction_id": None,
         "status": "pending",
@@ -272,7 +264,11 @@ async def edit_facture(
     notes: str = Form(""),
     status: str = Form("pending"),
     type: str = Form("achat"),
+    payment_date: str = Form(""),
+    payment_account: str = Form(""),
 ):
+    effective_status = "paid" if (payment_date or payment_account.strip()) else status
+
     data = {
         "vendor_name": vendor_name.strip(),
         "detail": detail.strip() or None,
@@ -282,8 +278,10 @@ async def edit_facture(
         "tva_rate": parse_float(tva_rate),
         "invoice_date": invoice_date or None,
         "notes": notes.strip() or None,
-        "status": status,
+        "status": effective_status,
         "type": type,
+        "payment_date": payment_date or None,
+        "payment_account": payment_account.strip() or None,
     }
 
     supabase.table("invoices").update(data).eq("id", invoice_id).execute()

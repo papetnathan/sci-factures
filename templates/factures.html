@@ -89,15 +89,20 @@
             {% endif %}
           </td>
           <td>
-            {% if inv.transaction %}
-              <span style="display:flex; align-items:center; gap:5px; font-size:12px; color:#10B981;">
-                <div style="width:6px; height:6px; border-radius:50%; background:#10B981; flex-shrink:0;"></div>
-                {{ inv.transaction.transaction_date[8:10] }}/{{ inv.transaction.transaction_date[5:7] }}/{{ inv.transaction.transaction_date[0:4] }}
-              </span>
-            {% else %}
-              <span style="font-size:12px; color:var(--gray-400);">—</span>
-            {% endif %}
-          </td>
+              {% if inv.transaction %}
+                <span style="display:flex; align-items:center; gap:5px; font-size:12px; color:#10B981;">
+                  <div style="width:6px; height:6px; border-radius:50%; background:#10B981; flex-shrink:0;"></div>
+                  {{ inv.transaction.transaction_date[8:10] }}/{{ inv.transaction.transaction_date[5:7] }}/{{ inv.transaction.transaction_date[0:4] }}
+                </span>
+              {% elif inv.payment_date %}
+                <span style="display:flex; align-items:center; gap:5px; font-size:12px; color:#6366F1;">
+                  <div style="width:6px; height:6px; border-radius:50%; background:#6366F1; flex-shrink:0;"></div>
+                  {{ inv.payment_date[8:10] }}/{{ inv.payment_date[5:7] }}/{{ inv.payment_date[0:4] }}
+                </span>
+              {% else %}
+                <span style="font-size:12px; color:var(--gray-400);">—</span>
+              {% endif %}
+            </td>
           <td>
             <div class="td-actions">
               <a href="/factures/{{ inv.id }}" class="btn btn-ghost btn-icon" onclick="event.stopPropagation()">
