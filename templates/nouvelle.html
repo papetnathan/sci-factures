@@ -49,10 +49,10 @@
       </div>
 
       <!-- Preview image -->
-      <div id="upload-preview" class="upload-preview" style="display:none; margin-top:12px;">
-        <img id="preview-img" src="" alt="" />
-        <canvas id="pdf-canvas" style="display:none; width:100%; border-radius:8px;"></canvas>
-        <button class="upload-preview-remove" onclick="removeImage()">✕ Supprimer</button>
+      <div id="upload-preview" class="upload-preview">
+        <img id="preview-img" src="" alt="Preview"/>
+        <canvas id="pdf-canvas" style="display:none; width:100%; max-height:300px; object-fit:contain; background:#fff; border-radius:var(--radius);"></canvas>
+        <button type="button" class="upload-preview-remove" onclick="removeImage()">✕ Supprimer</button>
       </div>
 
       <!-- Bouton analyser -->

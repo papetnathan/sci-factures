@@ -8,6 +8,7 @@ from routes.auth import router as auth_router
 from lib.auth import require_auth
 from routes.transactions import router as transactions_router
 from routes.export import router as export_router
+from starlette.middleware.base import BaseHTTPMiddleware
 
 app = FastAPI(title="SCI Factures")
 

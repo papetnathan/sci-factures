@@ -17,19 +17,25 @@ templates = Jinja2Templates(directory="templates")
 
 def upload_photo(photo_b64: str) -> Optional[str]:
     try:
-        match = re.match(r'data:(image/\w+);base64,(.+)', photo_b64, re.DOTALL)
+        # Supporte image/* ET application/pdf
+        match = re.match(r'data:([\w/]+);base64,(.+)', photo_b64, re.DOTALL)
         if not match:
             return None
         media_type = match.group(1)
         b64_data = match.group(2)
-        image_bytes = base64.b64decode(b64_data)
-
-        ext = media_type.split("/")[1].replace("jpeg", "jpg")
+        file_bytes = base64.b64decode(b64_data)
+ 
+        # Déterminer l'extension
+        if media_type == 'application/pdf':
+            ext = 'pdf'
+        else:
+            ext = media_type.split("/")[1].replace("jpeg", "jpg")
+ 
         filename = f"{uuid.uuid4()}.{ext}"
-
+ 
         supabase.storage.from_(STORAGE_BUCKET).upload(
             path=filename,
-            file=image_bytes,
+            file=file_bytes,
             file_options={"content-type": media_type}
         )
         return filename

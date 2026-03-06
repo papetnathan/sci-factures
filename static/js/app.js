@@ -45,32 +45,43 @@ function handleFile(file) {
 
   if (file.type === 'application/pdf') {
     previewImg.style.display = 'none';
-    pdfCanvas.style.display = 'block';
+    pdfCanvas.style.display  = 'block';
     previewDiv.style.maxHeight = 'none';
     previewDiv.style.overflow  = 'visible';
-    document.getElementById('photo-data').value = '';
 
     const reader = new FileReader();
-    reader.onload = async (e) => {
-      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 1.5 });
-      pdfCanvas.width  = viewport.width;
-      pdfCanvas.height = viewport.height;
-      await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
+    reader.onload = async (evt) => {
+      try {
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(evt.target.result) }).promise;
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 1.2 });
+        pdfCanvas.width  = viewport.width;
+        pdfCanvas.height = viewport.height;
+        await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
+
+        // JPEG compressé — bien plus léger qu'un PNG
+        const dataUrl = pdfCanvas.toDataURL('image/jpeg', 0.85);
+        document.getElementById('photo-data').value = dataUrl;
+        console.log('[PDF] photo-data prêt, taille ≈', Math.round(dataUrl.length / 1024), 'KB');
+      } catch (err) {
+        console.error('[PDF] Erreur rendu:', err);
+      }
     };
     reader.readAsArrayBuffer(file);
 
   } else {
-    pdfCanvas.style.display = 'none';
-    pdfCanvas.width = 0;
+    if (pdfCanvas) {
+      pdfCanvas.style.display = 'none';
+      pdfCanvas.width = 0;
+    }
     previewDiv.style.maxHeight = '';
     previewDiv.style.overflow  = '';
     previewImg.style.display = 'block';
+
     const reader = new FileReader();
-    reader.onload = (e) => {
-      previewImg.src = e.target.result;
-      document.getElementById('photo-data').value = e.target.result;
+    reader.onload = (evt) => {
+      previewImg.src = evt.target.result;
+      document.getElementById('photo-data').value = evt.target.result;
     };
     reader.readAsDataURL(file);
   }
@@ -83,8 +94,10 @@ function handleFile(file) {
 function removeImage() {
   const previewDiv = document.getElementById('upload-preview');
   const pdfCanvas  = document.getElementById('pdf-canvas');
-  pdfCanvas.style.display = 'none';
-  pdfCanvas.width = 0;
+  if (pdfCanvas) {
+    pdfCanvas.style.display = 'none';
+    pdfCanvas.width = 0;
+  }
   previewDiv.style.maxHeight = '';
   previewDiv.style.overflow  = '';
   document.getElementById('preview-img').src = '';
