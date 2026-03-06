@@ -7,6 +7,7 @@ from routes.invoices import router as invoices_router
 from routes.auth import router as auth_router
 from lib.auth import require_auth
 from routes.transactions import router as transactions_router
+from routes.export import router as export_router
 
 app = FastAPI(title="SCI Factures")
 
@@ -17,6 +18,7 @@ app.include_router(auth_router)
 app.include_router(extract_router)
 app.include_router(invoices_router)
 app.include_router(transactions_router)
+app.include_router(export_router)
 
 MOIS_FR = {
     1: "Janvier", 2: "Février", 3: "Mars", 4: "Avril",

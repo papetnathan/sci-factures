@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% set active = "export" %}
+{% block title %}Export comptable — SCI Factures{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-left">
+    <h1 class="page-title">Export comptable</h1>
+    <p class="page-subtitle">Génère les bordereaux Excel pour ta comptable</p>
+  </div>
+</div>
+
+<div class="kpi-grid" style="grid-template-columns: 1fr 1fr;">
+
+  <!-- Achats -->
+  <div class="table-container" style="padding: 0;">
+    <div class="table-toolbar" style="border-bottom: 1px solid var(--gray-100);">
+      <span style="font-size:13px; font-weight:600; color:var(--gray-700);">Bordereau des Achats</span>
+      <span class="badge" style="background:#FEF2F2; color:#DC2626;">Achats</span>
+    </div>
+    <div style="padding: 20px;">
+      <p style="font-size:12px; color:var(--gray-400); margin: 0 0 16px;">Toutes les factures d'achat du mois sélectionné</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:11px; font-weight:500; color:var(--gray-500); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em;">Mois</label>
+          <select id="mois-achat" class="form-select" onchange="updatePreview('achat')" style="width:100%;">
+            {% for num, nom in mois_list.items() %}
+            <option value="{{ num }}" {% if num == current_month %}selected{% endif %}>{{ nom }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:500; color:var(--gray-500); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em;">Année</label>
+          <select id="annee-achat" class="form-select" onchange="updatePreview('achat')" style="width:100%;">
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div id="preview-achat" class="export-preview">
+        <span style="color:var(--gray-400); font-size:12px; font-style:italic;">Chargement...</span>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; margin-top:16px; justify-content:center;" onclick="download('achat')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Télécharger
+      </button>
+    </div>
+  </div>
+
+  <!-- Ventes -->
+  <div class="table-container" style="padding: 0;">
+    <div class="table-toolbar" style="border-bottom: 1px solid var(--gray-100);">
+      <span style="font-size:13px; font-weight:600; color:var(--gray-700);">Bordereau des Ventes</span>
+      <span class="badge" style="background:#F0FDF4; color:#16A34A;">Ventes</span>
+    </div>
+    <div style="padding: 20px;">
+      <p style="font-size:12px; color:var(--gray-400); margin: 0 0 16px;">Toutes les factures de vente du mois sélectionné</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:11px; font-weight:500; color:var(--gray-500); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em;">Mois</label>
+          <select id="mois-vente" class="form-select" onchange="updatePreview('vente')" style="width:100%;">
+            {% for num, nom in mois_list.items() %}
+            <option value="{{ num }}" {% if num == current_month %}selected{% endif %}>{{ nom }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:500; color:var(--gray-500); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em;">Année</label>
+          <select id="annee-vente" class="form-select" onchange="updatePreview('vente')" style="width:100%;">
+            {% for y in years %}
+            <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div id="preview-vente" class="export-preview">
+        <span style="color:var(--gray-400); font-size:12px; font-style:italic;">Chargement...</span>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; margin-top:16px; justify-content:center;" onclick="download('vente')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Télécharger
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<div class="table-container" style="margin-top: 16px;">
+  <div class="table-toolbar">
+    <span style="font-size:13px; font-weight:500; color:var(--gray-700);">Comment ça marche ?</span>
+  </div>
+  <div style="padding: 16px 20px; display:flex; gap:32px;">
+    <div style="display:flex; align-items:flex-start; gap:10px;">
+      <div style="width:20px; height:20px; border-radius:50%; background:var(--gray-100); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:var(--gray-500); flex-shrink:0; margin-top:1px;">1</div>
+      <div>
+        <div style="font-size:12px; font-weight:500; color:var(--gray-700); margin-bottom:2px;">Sélectionne le mois</div>
+        <div style="font-size:12px; color:var(--gray-400);">Choisis la période à exporter</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:10px;">
+      <div style="width:20px; height:20px; border-radius:50%; background:var(--gray-100); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:var(--gray-500); flex-shrink:0; margin-top:1px;">2</div>
+      <div>
+        <div style="font-size:12px; font-weight:500; color:var(--gray-700); margin-bottom:2px;">Vérifie les factures</div>
+        <div style="font-size:12px; color:var(--gray-400);">Le nombre et le total s'affichent automatiquement</div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:10px;">
+      <div style="width:20px; height:20px; border-radius:50%; background:var(--gray-100); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:var(--gray-500); flex-shrink:0; margin-top:1px;">3</div>
+      <div>
+        <div style="font-size:12px; font-weight:500; color:var(--gray-700); margin-bottom:2px;">Télécharge le bordereau</div>
+        <div style="font-size:12px; color:var(--gray-400);">Fichier Excel prêt à envoyer à ta comptable</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.export-preview {
+  background: var(--gray-50, #f9fafb);
+  border: 1px solid var(--gray-100, #f3f4f6);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+.preview-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800, #1f2937);
+  display: block;
+}
+.preview-total {
+  font-size: 12px;
+  color: var(--gray-400, #9ca3af);
+  display: block;
+  margin-top: 2px;
+}
+</style>
+
+<script>
+const previewCache = {};
+
+async function updatePreview(type) {
+  const mois = document.getElementById(`mois-${type}`).value;
+  const annee = document.getElementById(`annee-${type}`).value;
+  const box = document.getElementById(`preview-${type}`);
+
+  box.innerHTML = '<span style="color:var(--gray-400);font-size:12px;font-style:italic;">Chargement...</span>';
+
+  const key = `${type}-${mois}-${annee}`;
+  if (previewCache[key]) { renderPreview(box, previewCache[key]); return; }
+
+  try {
+    const res = await fetch(`/export/preview?mois=${mois}&annee=${annee}&type_export=${type}`);
+    const data = await res.json();
+    previewCache[key] = data;
+    renderPreview(box, data);
+  } catch {
+    box.innerHTML = '<span style="font-size:12px;color:var(--gray-400);font-style:italic;">Erreur de chargement</span>';
+  }
+}
+
+function renderPreview(box, data) {
+  if (data.count === 0) {
+    box.innerHTML = '<span style="font-size:12px;color:var(--gray-400);font-style:italic;">Aucune facture sur cette période</span>';
+    return;
+  }
+  const total = data.total_ttc.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+  box.innerHTML = `
+    <div>
+      <span class="preview-count">${data.count} facture${data.count > 1 ? 's' : ''}</span>
+      <span class="preview-total">Total TTC : ${total}</span>
+    </div>`;
+}
+
+function download(type) {
+  const mois = document.getElementById(`mois-${type}`).value;
+  const annee = document.getElementById(`annee-${type}`).value;
+  window.location.href = `/export/download?mois=${mois}&annee=${annee}&type_export=${type}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  updatePreview('achat');
+  updatePreview('vente');
+});
+</script>
+{% endblock %}

@@ -39,22 +39,57 @@ if (uploadZone) {
 }
 
 function handleFile(file) {
-  // Preview
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    document.getElementById('preview-img').src = e.target.result;
-    document.getElementById('upload-preview').style.display = 'block';
-    document.getElementById('upload-zone').style.display = 'none';
-    document.getElementById('btn-analyze').style.display = 'flex';
-    // Stocke le base64 pour l'envoi
-    document.getElementById('photo-data').value = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  const previewDiv = document.getElementById('upload-preview');
+  const previewImg = document.getElementById('preview-img');
+  const pdfCanvas  = document.getElementById('pdf-canvas');
+
+  if (file.type === 'application/pdf') {
+    previewImg.style.display = 'none';
+    pdfCanvas.style.display = 'block';
+    previewDiv.style.maxHeight = 'none';
+    previewDiv.style.overflow  = 'visible';
+    document.getElementById('photo-data').value = '';
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1.5 });
+      pdfCanvas.width  = viewport.width;
+      pdfCanvas.height = viewport.height;
+      await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
+    };
+    reader.readAsArrayBuffer(file);
+
+  } else {
+    pdfCanvas.style.display = 'none';
+    pdfCanvas.width = 0;
+    previewDiv.style.maxHeight = '';
+    previewDiv.style.overflow  = '';
+    previewImg.style.display = 'block';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImg.src = e.target.result;
+      document.getElementById('photo-data').value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  previewDiv.style.display = 'block';
+  document.getElementById('upload-zone').style.display = 'none';
+  document.getElementById('btn-analyze').style.display = 'flex';
 }
 
 function removeImage() {
+  const previewDiv = document.getElementById('upload-preview');
+  const pdfCanvas  = document.getElementById('pdf-canvas');
+  pdfCanvas.style.display = 'none';
+  pdfCanvas.width = 0;
+  previewDiv.style.maxHeight = '';
+  previewDiv.style.overflow  = '';
   document.getElementById('preview-img').src = '';
-  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('preview-img').style.display = 'block';
+  previewDiv.style.display = 'none';
   document.getElementById('upload-zone').style.display = 'block';
   document.getElementById('btn-analyze').style.display = 'none';
   document.getElementById('photo-data').value = '';
@@ -69,7 +104,6 @@ async function analyzeImage() {
   const file = fileInput.files[0];
   if (!file) return;
 
-  // UI : état chargement
   document.getElementById('btn-analyze').style.display = 'none';
   document.getElementById('analyzing-state').style.display = 'block';
   hideExtractError();
@@ -101,11 +135,11 @@ async function analyzeImage() {
 }
 
 function fillForm(data) {
-  if (data.vendor_name) setValue('vendor_name', data.vendor_name);
-  if (data.detail)      setValue('detail',      data.detail);
-  if (data.amount_ttc)  setValue('amount_ttc',  data.amount_ttc);
-  if (data.amount_ht)   setValue('amount_ht',   data.amount_ht);
-  if (data.tva_rate)    setValue('tva_rate',    data.tva_rate);
+  if (data.vendor_name)  setValue('vendor_name',  data.vendor_name);
+  if (data.detail)       setValue('detail',       data.detail);
+  if (data.amount_ttc)   setValue('amount_ttc',   data.amount_ttc);
+  if (data.amount_ht)    setValue('amount_ht',    data.amount_ht);
+  if (data.tva_rate)     setValue('tva_rate',     data.tva_rate);
   if (data.invoice_date) setValue('invoice_date', data.invoice_date);
   checkTva();
 }
@@ -127,11 +161,7 @@ function checkTva() {
   if (ht && ttc && tva) {
     const expected = ht * (1 + tva / 100);
     const diff = Math.abs(expected - ttc);
-    if (diff > 1) {
-      alert.style.display = 'flex';
-    } else {
-      alert.style.display = 'none';
-    }
+    alert.style.display = diff > 1 ? 'flex' : 'none';
   } else {
     alert.style.display = 'none';
   }
@@ -163,7 +193,6 @@ function closeLightbox() {
   document.body.style.overflow = '';
 }
 
-// Fermer avec Escape
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox();
 });
@@ -220,7 +249,7 @@ async function importPdf() {
       resultDiv.style.background = 'var(--red-light)';
       resultDiv.style.border = '1px solid #FCA5A5';
       resultDiv.style.color = '#991B1B';
-      resultDiv.textContent = `${data.detail}`;
+      resultDiv.textContent = data.detail;
       btn.disabled = false;
       btn.textContent = 'Importer';
     }
@@ -237,13 +266,11 @@ function setType(type) {
   if (type === 'achat') {
     document.getElementById('btn-achat').className = 'btn btn-primary';
     document.getElementById('btn-vente').className = 'btn btn-secondary';
-    // Réinitialise la catégorie
     const cat = document.getElementById('category');
     if (cat && cat.value === 'loyer') cat.value = '';
   } else {
     document.getElementById('btn-achat').className = 'btn btn-secondary';
     document.getElementById('btn-vente').className = 'btn btn-primary';
-    // Pré-sélectionne loyer
     const cat = document.getElementById('category');
     if (cat) cat.value = 'loyer';
   }
