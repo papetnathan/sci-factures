@@ -80,8 +80,26 @@ function handleFile(file) {
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      previewImg.src = evt.target.result;
-      document.getElementById('photo-data').value = evt.target.result;
+      const img = new Image();
+      img.onload = () => {
+        // Redimensionne si trop grand (max 1800px de large)
+        const maxW = 1800;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxW) {
+          h = Math.round(h * maxW / w);
+          w = maxW;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.85);
+        previewImg.src = compressed;
+        document.getElementById('photo-data').value = compressed;
+        console.log('[IMG] photo-data prêt, taille ≈', Math.round(compressed.length / 1024), 'KB');
+      };
+      img.src = evt.target.result;
     };
     reader.readAsDataURL(file);
   }
