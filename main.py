@@ -8,7 +8,10 @@ from routes.auth import router as auth_router
 from lib.auth import require_auth
 from routes.transactions import router as transactions_router
 from routes.export import router as export_router
-from starlette.middleware.base import BaseHTTPMiddleware
+
+# Augmente la limite des champs de formulaire à 20MB (pour les photos base64)
+import starlette.formparsers
+starlette.formparsers.MAX_FIELD_SIZE = 20 * 1024 * 1024  # 20MB
 
 app = FastAPI(title="SCI Factures")
 
