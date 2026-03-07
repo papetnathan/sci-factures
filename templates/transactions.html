@@ -62,7 +62,7 @@
 </div>
 
 <!-- Vue cartes (mobile) -->
-<div class="mobile-only" style="display:flex; flex-direction:column; gap:10px;">
+<div class="mobile-only" style="flex-direction:column; gap:10px;">
   {% for f in imported_files %}
   <div style="background:white; border:1px solid var(--gray-200); border-radius:var(--radius); padding:14px 16px; overflow:hidden;">
     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
@@ -133,11 +133,11 @@
 
 <style>
 .desktop-only { display: block; }
-.mobile-only  { display: none; }
+.mobile-only { display: none !important; }
 
 @media (max-width: 768px) {
-  .desktop-only { display: none; }
-  .mobile-only  { display: flex; }
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
 }
 </style>
 {% endblock %}
