@@ -59,7 +59,6 @@ function handleFile(file) {
         pdfCanvas.height = viewport.height;
         await page.render({ canvasContext: pdfCanvas.getContext('2d'), viewport }).promise;
 
-        // JPEG compressé — bien plus léger qu'un PNG
         const dataUrl = pdfCanvas.toDataURL('image/jpeg', 0.85);
         document.getElementById('photo-data').value = dataUrl;
         console.log('[PDF] photo-data prêt, taille ≈', Math.round(dataUrl.length / 1024), 'KB');
@@ -82,7 +81,6 @@ function handleFile(file) {
     reader.onload = (evt) => {
       const img = new Image();
       img.onload = () => {
-        // Redimensionne si trop grand (max 1800px de large)
         const maxW = 1800;
         let w = img.width;
         let h = img.height;
@@ -147,16 +145,10 @@ async function analyzeImage() {
       method: 'POST',
       body: formData,
     });
-
     const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.detail || 'Erreur inconnue');
-    }
-
+    if (!response.ok) throw new Error(result.detail || 'Erreur inconnue');
     fillForm(result.data);
     document.getElementById('ia-badge').style.display = 'block';
-
   } catch (err) {
     showExtractError(err.message);
     document.getElementById('btn-analyze').style.display = 'flex';
@@ -186,13 +178,10 @@ function checkTva() {
   const ttc = parseFloat(document.getElementById('amount_ttc')?.value);
   const tva = parseFloat(document.getElementById('tva_rate')?.value);
   const alert = document.getElementById('tva-alert');
-
   if (!alert) return;
-
   if (ht && ttc && tva) {
     const expected = ht * (1 + tva / 100);
-    const diff = Math.abs(expected - ttc);
-    alert.style.display = diff > 1 ? 'flex' : 'none';
+    alert.style.display = Math.abs(expected - ttc) > 1 ? 'flex' : 'none';
   } else {
     alert.style.display = 'none';
   }
@@ -201,10 +190,7 @@ function checkTva() {
 function showExtractError(msg) {
   const el = document.getElementById('extract-error');
   const msgEl = document.getElementById('extract-error-msg');
-  if (el && msgEl) {
-    msgEl.textContent = msg;
-    el.style.display = 'flex';
-  }
+  if (el && msgEl) { msgEl.textContent = msg; el.style.display = 'flex'; }
 }
 
 function hideExtractError() {
@@ -223,10 +209,6 @@ function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
   document.body.style.overflow = '';
 }
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeLightbox();
-});
 
 // ─── Import PDF Transactions ───────────────────────────
 let selectedPdfFile = null;
@@ -250,24 +232,16 @@ function handlePdfSelect(input) {
 
 async function importPdf() {
   if (!selectedPdfFile) return;
-
   const btn = document.getElementById('import-btn');
   btn.disabled = true;
   btn.textContent = 'Import en cours...';
-
   const formData = new FormData();
   formData.append('file', selectedPdfFile);
-
   try {
-    const res = await fetch('/transactions/import', {
-      method: 'POST',
-      body: formData,
-    });
-
+    const res = await fetch('/transactions/import', { method: 'POST', body: formData });
     const data = await res.json();
     const resultDiv = document.getElementById('import-result');
     resultDiv.style.display = 'block';
-
     if (res.ok) {
       resultDiv.style.background = 'var(--green-light)';
       resultDiv.style.border = '1px solid #6EE7B7';
@@ -306,3 +280,73 @@ function setType(type) {
     if (cat) cat.value = 'loyer';
   }
 }
+
+// ══════════════════════════════════════════════════════
+// ─── NOUVELLES FONCTIONNALITÉS ────────────────────────
+// ══════════════════════════════════════════════════════
+
+// ─── Toast ────────────────────────────────────────────
+(function () {
+  const container = document.createElement('div');
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+
+  window.showToast = function (message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span class="toast-dot"></span>${message}`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('toast-show')));
+    setTimeout(() => {
+      toast.classList.add('toast-hide');
+      toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    }, 3000);
+  };
+})();
+
+// ─── Init DOMContentLoaded ────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Toasts auto depuis attributs data- dans le DOM Jinja
+  // Ex : <div data-toast-success="Facture créée" style="display:none"></div>
+  const toastSuccess = document.querySelector('[data-toast-success]');
+  if (toastSuccess) showToast(toastSuccess.dataset.toastSuccess, 'success');
+
+  const toastError = document.querySelector('[data-toast-error]');
+  if (toastError) showToast(toastError.dataset.toastError, 'error');
+
+  const toastInfo = document.querySelector('[data-toast-info]');
+  if (toastInfo) showToast(toastInfo.dataset.toastInfo, 'info');
+
+  // ─── Compteurs animés KPIs ───────────────────────────
+  function animateCounter(el, target, duration) {
+    const start = performance.now();
+    const fmt = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+    function step(now) {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(ease * target);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(step);
+  }
+
+  document.querySelectorAll('.kpi-value').forEach(el => {
+    const raw = el.textContent.trim().replace(/\s/g, '').replace(',', '.').replace('−', '-').replace('€', '');
+    const target = parseFloat(raw.replace(/[^\d.\-]/g, ''));
+    if (isNaN(target) || target === 0) return;
+    const color = el.style.color;
+    el.textContent = '0,00 €';
+    if (color) el.style.color = color;
+    setTimeout(() => animateCounter(el, Math.abs(target), 1100), 150);
+  });
+
+});
+
+// ─── Raccourcis clavier ────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'n' || e.key === 'N') window.location.href = '/factures/nouvelle';
+});
