@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from lib.supabase import supabase, STORAGE_BUCKET, get_public_url
 from lib.categories import CATEGORIES, get_category
-from lib.auth import require_auth
+from lib.auth import require_auth, get_session
 from typing import Optional
 from datetime import datetime, timedelta
 import base64
@@ -15,24 +15,26 @@ templates = Jinja2Templates(directory="templates")
 
 # ─── Helpers ──────────────────────────────────────────
 
+def get_user_email(request: Request) -> str:
+    session = get_session(request)
+    return session["user"].email if session else ""
+
 def upload_photo(photo_b64: str) -> Optional[str]:
     try:
-        # Supporte image/* ET application/pdf
         match = re.match(r'data:([\w/]+);base64,(.+)', photo_b64, re.DOTALL)
         if not match:
             return None
         media_type = match.group(1)
         b64_data = match.group(2)
         file_bytes = base64.b64decode(b64_data)
- 
-        # Déterminer l'extension
+
         if media_type == 'application/pdf':
             ext = 'pdf'
         else:
             ext = media_type.split("/")[1].replace("jpeg", "jpg")
- 
+
         filename = f"{uuid.uuid4()}.{ext}"
- 
+
         supabase.storage.from_(STORAGE_BUCKET).upload(
             path=filename,
             file=file_bytes,
@@ -50,7 +52,6 @@ def parse_float(value: str) -> Optional[float]:
         return None
 
 def find_matching_transactions(invoice: dict) -> list:
-    """Cherche les transactions avec montant exact et date ±30 jours."""
     amount = invoice.get("amount_ttc")
     invoice_date = invoice.get("invoice_date")
     invoice_type = invoice.get("type", "achat")
@@ -119,20 +120,25 @@ async def list_factures(request: Request, category: str = "", status: str = "", 
 
     return templates.TemplateResponse("factures.html", {
         "request": request,
+        "user_email": get_user_email(request),
         "invoices": invoices,
         "categories": CATEGORIES,
         "total": len(invoices),
         "filters": {"category": category, "status": status, "q": q, "type": type},
     })
 
-# ─── Nouvelle facture (DOIT être avant /{invoice_id}) ──
+# ─── Nouvelle facture ──────────────────────────────────
 
 @router.get("/factures/nouvelle")
 async def nouvelle_facture(request: Request):
     guard = require_auth(request)
     if guard:
         return guard
-    return templates.TemplateResponse("nouvelle.html", {"request": request, "categories": CATEGORIES})
+    return templates.TemplateResponse("nouvelle.html", {
+        "request": request,
+        "user_email": get_user_email(request),
+        "categories": CATEGORIES,
+    })
 
 # ─── Créer une facture ─────────────────────────────────
 
@@ -209,6 +215,7 @@ async def detail_facture(request: Request, invoice_id: str, created: str = "", u
 
     return templates.TemplateResponse("facture_detail.html", {
         "request": request,
+        "user_email": get_user_email(request),
         "invoice": invoice,
         "photo_url": photo_url,
         "category": category,

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}SCI Factures{% endblock %}</title>
+  <title>{% block title %}Papriso{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
           <polyline points="14 2 14 8 20 8"/>
         </svg>
       </div>
-      <span class="logo-text">SCI Factures</span>
+      <span class="logo-text">Papriso</span>
     </div>
 
     <nav class="sidebar-nav">
@@ -53,10 +53,10 @@
     </nav>
 
     <div class="sidebar-footer">
-      <div class="sidebar-footer-avatar">SCI</div>
+      <div class="sidebar-footer-avatar">P</div>
       <div class="sidebar-footer-info">
-        <div class="sidebar-footer-name">Ma SCI</div>
-        <div class="sidebar-footer-role">Administrateur</div>
+        <div class="sidebar-footer-name">Papriso</div>
+        <div class="sidebar-footer-role">{{ user_email or "" }}</div>
       </div>
       <form method="POST" action="/logout" style="margin-left:auto;">
         <button type="submit" class="btn btn-ghost btn-icon" title="Se déconnecter" style="color:var(--gray-500);">
@@ -70,7 +70,7 @@
     <button class="mobile-menu-btn" onclick="toggleSidebar()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
-    <span class="mobile-logo">SCI Factures</span>
+    <span class="mobile-logo">Papriso</span>
   </header>
 
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>

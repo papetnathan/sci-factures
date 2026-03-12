@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from lib.auth import require_auth
+from lib.auth import require_auth, get_session
 from lib.supabase import supabase
 
 router = APIRouter()
@@ -22,6 +22,9 @@ MOIS_FR = {
     9: "Septembre", 10: "Octobre", 11: "Novembre", 12: "Décembre",
 }
 
+def get_user_email(request: Request) -> str:
+    session = get_session(request)
+    return session["user"].email if session else ""
 
 # ─── Helpers ──────────────────────────────────────────
 
@@ -56,7 +59,6 @@ def get_day(inv: dict):
 
 
 def make_piece_number(annee: int, idx: int) -> int:
-    """Format: YY + 5 chiffres à partir de 01001. Ex: 2401001, 2401002..."""
     return int(f"{annee % 100:02d}{1000 + idx + 1:05d}")
 
 
@@ -77,20 +79,16 @@ def fetch_invoices(type_inv: str, mois: int, annee: int) -> list:
 
 
 def fill_saisie(ws, invoices: list, mois: int, annee: int, is_achat: bool):
-    """Remplit la feuille SAISIE avec les données des factures."""
     ws["B4"] = mois
     ws["B5"] = annee
 
-    # Effacer les lignes de données existantes (à partir de la ligne 10)
-    # On efface uniquement les colonnes de saisie (B à T), pas les colonnes de formules
     max_row = max(ws.max_row, 10 + len(invoices) + 5)
     for r in range(10, max_row + 1):
-        for c in range(2, 21):  # colonnes B à T
+        for c in range(2, 21):
             cell = ws.cell(row=r, column=c)
             if cell.value is not None and not str(cell.value).startswith("="):
                 cell.value = None
 
-    # Colonne TVA : Q (17) pour achats, J (10) pour ventes
     tva_col = 17 if is_achat else 10
 
     for i, inv in enumerate(invoices):
@@ -99,13 +97,12 @@ def fill_saisie(ws, invoices: list, mois: int, annee: int, is_achat: bool):
         ht = inv.get("amount_ht")
         tva = round(ttc - ht, 2) if ht is not None else None
 
-        ws.cell(row=row, column=2).value = get_day(inv)                 # B : Jour
-        # C : Compte → laissé vide (à renseigner par la comptable)
-        ws.cell(row=row, column=4).value = ttc                           # D : Montant TTC
-        ws.cell(row=row, column=5).value = make_piece_number(annee, i)  # E : N° pièce
-        ws.cell(row=row, column=6).value = build_libelle(inv)           # F : Libellé
-        ws.cell(row=row, column=7).value = ht                           # G : Montant HT
-        ws.cell(row=row, column=tva_col).value = tva                    # Q/J : TVA
+        ws.cell(row=row, column=2).value = get_day(inv)
+        ws.cell(row=row, column=4).value = ttc
+        ws.cell(row=row, column=5).value = make_piece_number(annee, i)
+        ws.cell(row=row, column=6).value = build_libelle(inv)
+        ws.cell(row=row, column=7).value = ht
+        ws.cell(row=row, column=tva_col).value = tva
 
 
 def generate_excel(type_inv: str, mois: int, annee: int) -> tuple[io.BytesIO, int]:
@@ -142,6 +139,7 @@ async def export_page(request: Request):
     now = date.today()
     return templates.TemplateResponse("export.html", {
         "request": request,
+        "user_email": get_user_email(request),
         "mois_list": MOIS_FR,
         "current_month": now.month,
         "current_year": now.year,
@@ -155,7 +153,6 @@ async def export_preview(
     annee: int = Query(...),
     type_export: str = Query(...),
 ):
-    """Retourne le nombre de factures et le total pour la prévisualisation."""
     invoices = fetch_invoices(type_export, mois, annee)
     total_ttc = sum(inv.get("amount_ttc") or 0 for inv in invoices)
     return {

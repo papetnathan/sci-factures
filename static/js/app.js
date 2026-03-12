@@ -304,11 +304,10 @@ function setType(type) {
   };
 })();
 
-// ─── Init DOMContentLoaded ────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+// ─── Init ─────────────────────────────────────────────
+function init() {
 
   // Toasts auto depuis attributs data- dans le DOM Jinja
-  // Ex : <div data-toast-success="Facture créée" style="display:none"></div>
   const toastSuccess = document.querySelector('[data-toast-success]');
   if (toastSuccess) showToast(toastSuccess.dataset.toastSuccess, 'success');
 
@@ -319,30 +318,38 @@ document.addEventListener('DOMContentLoaded', () => {
   if (toastInfo) showToast(toastInfo.dataset.toastInfo, 'info');
 
   // ─── Compteurs animés KPIs ───────────────────────────
-  function animateCounter(el, target, duration) {
-    const start = performance.now();
-    const fmt = (v) => v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
-    function step(now) {
-      const p = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      el.textContent = fmt(ease * target);
-      if (p < 1) requestAnimationFrame(step);
-      else el.textContent = fmt(target);
-    }
-    requestAnimationFrame(step);
-  }
-
   document.querySelectorAll('.kpi-value').forEach(el => {
-    const raw = el.textContent.trim().replace(/\s/g, '').replace(',', '.').replace('−', '-').replace('€', '');
-    const target = parseFloat(raw.replace(/[^\d.\-]/g, ''));
-    if (isNaN(target) || target === 0) return;
-    const color = el.style.color;
-    el.textContent = '0,00 €';
-    if (color) el.style.color = color;
-    setTimeout(() => animateCounter(el, Math.abs(target), 1100), 150);
-  });
+    const raw = el.dataset.kpi;
+    if (!raw) return;
 
-});
+    const target = parseFloat(raw);
+    if (isNaN(target) || target === 0) return;
+
+    const color = el.style.color;
+    el.textContent = '0.00 €';
+    el.style.color = color;
+
+    setTimeout(() => {
+      const start = performance.now();
+      function step(now) {
+        const p = Math.min((now - start) / 1100, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = (ease * target).toFixed(2) + ' €';
+        el.style.color = color;
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = target.toFixed(2) + ' €';
+      }
+      requestAnimationFrame(step);
+    }, 150);
+  });
+}
+
+// Lance init() que le DOM soit déjà prêt ou non
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 // ─── Raccourcis clavier ────────────────────────────────
 document.addEventListener('keydown', (e) => {

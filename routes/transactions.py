@@ -2,11 +2,15 @@ from fastapi import APIRouter, Request, UploadFile, File, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse, JSONResponse
 from lib.supabase import supabase
-from lib.auth import require_auth
+from lib.auth import require_auth, get_session
 from lib.parser import parse_credit_mutuel_pdf, hash_pdf
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+def get_user_email(request: Request) -> str:
+    session = get_session(request)
+    return session["user"].email if session else ""
 
 @router.get("/transactions")
 async def list_transactions(request: Request):
@@ -19,6 +23,7 @@ async def list_transactions(request: Request):
 
     return templates.TemplateResponse("transactions.html", {
         "request": request,
+        "user_email": get_user_email(request),
         "imported_files": imported_files,
     })
 
@@ -34,7 +39,6 @@ async def import_transactions(request: Request, file: UploadFile = File(...)):
     content = await file.read()
     content_hash = hash_pdf(content)
 
-    # Vérifie si déjà importé
     existing = supabase.table("imported_files").select("id, filename").eq("content_hash", content_hash).execute()
     if existing.data:
         raise HTTPException(
@@ -42,7 +46,6 @@ async def import_transactions(request: Request, file: UploadFile = File(...)):
             detail=f"Ce relevé a déjà été importé (fichier original : {existing.data[0]['filename']})"
         )
 
-    # Parse le PDF
     try:
         result = parse_credit_mutuel_pdf(content)
     except Exception as e:
@@ -51,7 +54,6 @@ async def import_transactions(request: Request, file: UploadFile = File(...)):
     if not result["transactions"]:
         raise HTTPException(status_code=400, detail="Aucune transaction trouvée dans le PDF")
 
-    # Insère les transactions
     inserted = 0
     for tx in result["transactions"]:
         existing_tx = supabase.table("bank_transactions")\
@@ -64,7 +66,6 @@ async def import_transactions(request: Request, file: UploadFile = File(...)):
             supabase.table("bank_transactions").insert(tx).execute()
             inserted += 1
 
-    # Enregistre le fichier importé
     supabase.table("imported_files").insert({
         "filename": file.filename,
         "content_hash": content_hash,
@@ -83,12 +84,10 @@ async def import_transactions(request: Request, file: UploadFile = File(...)):
 
 @router.post("/transactions/files/{file_id}/delete")
 async def delete_imported_file(file_id: str):
-    # Récupère les infos du fichier pour supprimer les transactions associées
     file_result = supabase.table("imported_files").select("date_min, date_max, account_name").eq("id", file_id).execute()
 
     if file_result.data:
         f = file_result.data[0]
-        # Supprime les transactions de cette période et ce compte
         supabase.table("bank_transactions")\
             .delete()\
             .gte("transaction_date", f["date_min"])\

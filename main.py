@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse
 from routes.extract import router as extract_router
 from routes.invoices import router as invoices_router
 from routes.auth import router as auth_router
-from lib.auth import require_auth
+from lib.auth import require_auth, get_session
 from routes.transactions import router as transactions_router
 from routes.export import router as export_router
 
@@ -46,6 +46,9 @@ async def dashboard(request: Request):
     from lib.supabase import supabase
     from datetime import date
 
+    session = get_session(request)
+    user_email = session["user"].email if session else ""
+
     result = supabase.table("invoices").select("*").order("invoice_date", desc=True).execute()
     invoices = result.data or []
 
@@ -69,6 +72,7 @@ async def dashboard(request: Request):
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
+        "user_email": user_email,
         "total_achats_mois": total_achats_mois,
         "total_ventes_mois": total_ventes_mois,
         "balance_mois": balance_mois,

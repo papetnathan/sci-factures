@@ -3,59 +3,95 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Connexion — SCI Factures</title>
+  <title>Connexion — Papriso</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #F5F5F2;
+    }
+
     body {
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background: var(--gray-50);
     }
+
+    canvas#bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* ── Carte ── */
     .login-card {
-      background: var(--gray-0);
-      border: 1px solid var(--gray-200);
-      border-radius: var(--radius);
+      position: relative;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 18px;
       padding: 40px;
       width: 100%;
       max-width: 380px;
-      box-shadow: 0 4px 24px rgba(15,17,23,0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+
+      /* ② Animation d'entrée */
+      animation: cardIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .login-logo {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 32px;
     }
+
     .login-logo-mark {
-      width: 32px;
-      height: 32px;
-      background: var(--blue);
+      width: 30px;
+      height: 30px;
+      background: #0A0A0A;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
+
     .login-logo-text {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--gray-900);
+      font-size: 15px;
+      font-weight: 700;
+      color: #0A0A0A;
+      letter-spacing: -0.01em;
     }
+
     .login-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--gray-900);
-      margin-bottom: 6px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #0A0A0A;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
     }
+
     .login-subtitle {
-      font-size: 13px;
-      color: var(--gray-400);
+      font-size: 12.5px;
+      color: #999;
       margin-bottom: 28px;
     }
+
     .login-error {
       background: var(--red-light);
       border: 1px solid #FCA5A5;
@@ -68,19 +104,121 @@
       align-items: center;
       gap: 8px;
     }
+
+    /* ── ⑤ Floating labels ── */
+    .float-group {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .float-group.mb-large {
+      margin-bottom: 24px;
+    }
+
+    .float-input {
+      width: 100%;
+      padding: 18px 13px 6px;
+      background: #F9F9F7;
+      border: 1.5px solid #E8E8E4;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #0A0A0A;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .float-input.has-icon {
+      padding-right: 40px;
+    }
+
+    .float-input:focus {
+      border-color: #0A0A0A;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .float-label {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: #BBB;
+      font-weight: 600;
+      pointer-events: none;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: left center;
+    }
+
+    .float-input:focus ~ .float-label,
+    .float-input:not(:placeholder-shown) ~ .float-label {
+      top: 9px;
+      transform: translateY(0) scale(0.78);
+      color: #888;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Icône œil ── */
+    .eye-btn {
+      position: absolute;
+      right: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: #CCC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+      border-radius: 4px;
+    }
+
+    .eye-btn:hover { color: #0A0A0A; }
+    .eye-btn svg { display: block; }
+
+    /* ── Bouton ── */
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: #0A0A0A;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      cursor: pointer;
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s;
+    }
+
+    .btn-login:hover  { transform: scale(1.03); background: #222; }
+    .btn-login:active { transform: scale(0.98); }
+
+    @media (max-width: 480px) {
+      .login-card { margin: 16px; padding: 28px 24px; }
+    }
   </style>
 </head>
 <body>
+
+  <canvas id="bg"></canvas>
+
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-mark">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
       </div>
-      <span class="login-logo-text">SCI Factures</span>
+      <span class="login-logo-text">Papriso</span>
     </div>
 
     <div class="login-title">Connexion</div>
-    <div class="login-subtitle">Accédez à votre espace comptabilité</div>
+    <div class="login-subtitle">Accède à ta comptabilité SCI</div>
 
     {% if error %}
     <div class="login-error">
@@ -90,33 +228,146 @@
     {% endif %}
 
     <form method="POST" action="/login">
-      <div class="form-group">
-        <label class="form-label" for="email">Email</label>
+
+      <!-- Email -->
+      <div class="float-group">
         <input
-          class="form-input"
+          class="float-input"
           type="email"
           id="email"
           name="email"
-          placeholder="votre@email.com"
+          placeholder=" "
           required
           autofocus
         />
+        <label class="float-label" for="email">Email</label>
       </div>
-      <div class="form-group" style="margin-bottom: 24px;">
-        <label class="form-label" for="password">Mot de passe</label>
+
+      <!-- Mot de passe -->
+      <div class="float-group mb-large">
         <input
-          class="form-input"
+          class="float-input has-icon"
           type="password"
           id="password"
           name="password"
-          placeholder="••••••••"
+          placeholder=" "
           required
         />
+        <label class="float-label" for="password">Mot de passe</label>
+        <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePassword()" aria-label="Afficher le mot de passe">
+          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
-        Se connecter
+
+      <button type="submit" class="btn-login">
+        Se connecter →
       </button>
+
     </form>
   </div>
+
+  <script>
+    // ── Toggle mot de passe ──────────────────────────────
+    function togglePassword() {
+      const input  = document.getElementById('password');
+      const icon   = document.getElementById('eyeIcon');
+      const btn    = document.getElementById('eyeBtn');
+      const show   = input.type === 'password';
+
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+
+      icon.innerHTML = show
+        ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
+        : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+           <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+           <line x1="1" y1="1" x2="23" y2="23"/>`;
+    }
+
+    // ── Particules ───────────────────────────────────────
+    const canvas = document.getElementById('bg');
+    const ctx    = canvas.getContext('2d');
+    let W, H, particles = [];
+    const N            = 80;
+    const CONNECT_DIST = 130;
+    let mouse = { x: -999, y: -999 };
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function mkParticle() {
+      return {
+        x:  Math.random() * W,
+        y:  Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r:  Math.random() * 1.5 + 0.5,
+      };
+    }
+
+    function init() {
+      resize();
+      particles = Array.from({ length: N }, mkParticle);
+    }
+
+    function draw() {
+      ctx.fillStyle = '#F5F5F2';
+      ctx.fillRect(0, 0, W, H);
+
+      for (let i = 0; i < N; i++) {
+        for (let j = i + 1; j < N; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const d  = Math.sqrt(dx * dx + dy * dy);
+          if (d < CONNECT_DIST) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0,0,0,${0.08 * (1 - d / CONNECT_DIST)})`;
+            ctx.lineWidth = 0.6;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+
+        const dx = particles[i].x - mouse.x;
+        const dy = particles[i].y - mouse.y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < 180) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(0,0,0,${0.2 * (1 - d / 180)})`;
+          ctx.lineWidth = 0.7;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.stroke();
+        }
+      }
+
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fill();
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', () => { mouse.x = -999; mouse.y = -999; });
+
+    init();
+    draw();
+  </script>
+
 </body>
 </html>

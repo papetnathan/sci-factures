@@ -17,21 +17,21 @@
 <div class="kpi-grid">
   <div class="kpi-card">
     <div class="kpi-label">Achats {{ current_month_label }}</div>
-    <div class="kpi-value" style="color:#EF4444;">
+    <div class="kpi-value" style="color:#EF4444;" data-kpi="{{ total_achats_mois if total_achats_mois else '' }}">
       {% if total_achats_mois %}{{ "%.2f €"|format(total_achats_mois) }}{% else %}—{% endif %}
     </div>
     <div class="kpi-sub">Dépenses du mois</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">Loyers {{ current_month_label }}</div>
-    <div class="kpi-value" style="color:#10B981;">
+    <div class="kpi-value" style="color:#10B981;" data-kpi="{{ total_ventes_mois if total_ventes_mois else '' }}">
       {% if total_ventes_mois %}{{ "%.2f €"|format(total_ventes_mois) }}{% else %}—{% endif %}
     </div>
     <div class="kpi-sub">Encaissements du mois</div>
   </div>
   <div class="kpi-card">
     <div class="kpi-label">Balance {{ current_month_label }}</div>
-    <div class="kpi-value" style="color:{% if balance_mois >= 0 %}#10B981{% else %}#EF4444{% endif %};">
+    <div class="kpi-value" style="color:{% if balance_mois >= 0 %}#10B981{% else %}#EF4444{% endif %};" data-kpi="{{ balance_mois if balance_mois else '' }}">
       {% if balance_mois %}{{ "%.2f €"|format(balance_mois) }}{% else %}—{% endif %}
     </div>
     <div class="kpi-sub">Loyers − Achats</div>
