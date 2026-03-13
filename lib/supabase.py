@@ -10,6 +10,24 @@ STORAGE_BUCKET = "invoices"
 
 supabase: Client = create_client(url, key)
 
+# Durée de validité des liens signés (en secondes)
+SIGNED_URL_EXPIRY = 60 * 60  # 1 heure
+
+
 def get_public_url(photo_path: str) -> str:
-    """Retourne l'URL publique permanente d'une photo."""
-    return f"{url}/storage/v1/object/public/{STORAGE_BUCKET}/{photo_path}"
+    """
+    Retourne une URL signée temporaire (1h) pour accéder à un fichier privé.
+    Remplace l'ancienne URL publique permanente.
+    Si la génération échoue, retourne None plutôt que de planter.
+    """
+    if not photo_path:
+        return None
+    try:
+        result = supabase.storage.from_(STORAGE_BUCKET).create_signed_url(
+            photo_path,
+            SIGNED_URL_EXPIRY
+        )
+        return result.get("signedURL") or result.get("signed_url")
+    except Exception as e:
+        print(f"Erreur génération signed URL pour {photo_path}: {e}")
+        return None

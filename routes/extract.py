@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from lib.auth import require_auth
 from lib.openai_extract import extract_invoice_data, extract_invoice_data_from_text
 import pdfplumber
 import fitz  # PyMuPDF
@@ -12,7 +13,11 @@ MAX_SIZE_MB = 10
 
 
 @router.post("/api/extract")
-async def extract(file: UploadFile = File(...)):
+async def extract(request: Request, file: UploadFile = File(...)):
+    guard = require_auth(request)  # ← ajouté — protège l'usage de GPT-4o Vision
+    if guard:
+        return guard
+
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400,

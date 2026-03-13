@@ -149,10 +149,15 @@ async def export_page(request: Request):
 
 @router.get("/export/preview")
 async def export_preview(
+    request: Request,          # ← ajouté
     mois: int = Query(...),
     annee: int = Query(...),
     type_export: str = Query(...),
 ):
+    guard = require_auth(request)  # ← ajouté
+    if guard:
+        return guard
+
     invoices = fetch_invoices(type_export, mois, annee)
     total_ttc = sum(inv.get("amount_ttc") or 0 for inv in invoices)
     return {

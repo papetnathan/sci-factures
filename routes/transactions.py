@@ -83,7 +83,11 @@ async def import_transactions(request: Request, file: UploadFile = File(...)):
     })
 
 @router.post("/transactions/files/{file_id}/delete")
-async def delete_imported_file(file_id: str):
+async def delete_imported_file(request: Request, file_id: str):
+    guard = require_auth(request)  # ← ajouté
+    if guard:
+        return guard
+
     file_result = supabase.table("imported_files").select("date_min, date_max, account_name").eq("id", file_id).execute()
 
     if file_result.data:

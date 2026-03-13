@@ -156,6 +156,10 @@ async def create_facture(
     photo_data: str = Form(""),
     type: str = Form("achat"),
 ):
+    guard = require_auth(request)
+    if guard:
+        return guard
+
     photo_path = None
     if photo_data:
         photo_path = upload_photo(photo_data)
@@ -229,7 +233,11 @@ async def detail_facture(request: Request, invoice_id: str, created: str = "", u
 # ─── Lier une transaction à une facture ───────────────
 
 @router.post("/factures/{invoice_id}/match")
-async def match_transaction(invoice_id: str, transaction_id: str = Form(...)):
+async def match_transaction(request: Request, invoice_id: str, transaction_id: str = Form(...)):
+    guard = require_auth(request)  # ← MANQUAIT
+    if guard:
+        return guard
+
     supabase.table("invoices").update({
         "transaction_id": transaction_id,
         "status": "paid",
@@ -245,7 +253,11 @@ async def match_transaction(invoice_id: str, transaction_id: str = Form(...)):
 # ─── Dissocier une transaction ─────────────────────────
 
 @router.post("/factures/{invoice_id}/unmatch")
-async def unmatch_transaction(invoice_id: str):
+async def unmatch_transaction(request: Request, invoice_id: str):
+    guard = require_auth(request)  # ← MANQUAIT
+    if guard:
+        return guard
+
     result = supabase.table("invoices").select("transaction_id").eq("id", invoice_id).execute()
     if result.data and result.data[0].get("transaction_id"):
         tx_id = result.data[0]["transaction_id"]
@@ -280,6 +292,10 @@ async def edit_facture(
     payment_date: str = Form(""),
     payment_account: str = Form(""),
 ):
+    guard = require_auth(request)  # ← MANQUAIT
+    if guard:
+        return guard
+
     effective_status = "paid" if (payment_date or payment_account.strip()) else status
 
     data = {
@@ -303,7 +319,11 @@ async def edit_facture(
 # ─── Supprimer une facture ─────────────────────────────
 
 @router.post("/factures/{invoice_id}/delete")
-async def delete_facture(invoice_id: str):
+async def delete_facture(request: Request, invoice_id: str):
+    guard = require_auth(request)  # ← MANQUAIT
+    if guard:
+        return guard
+
     result = supabase.table("invoices").select("photo_url").eq("id", invoice_id).execute()
     if result.data and result.data[0].get("photo_url"):
         try:
