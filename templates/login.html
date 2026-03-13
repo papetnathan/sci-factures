@@ -14,7 +14,6 @@
       overflow: hidden;
       background: #F5F5F2;
     }
-
     body {
       display: flex;
       align-items: center;
@@ -30,7 +29,7 @@
       z-index: 0;
     }
 
-    /* ── Carte ── */
+    /* ── Carte principale ── */
     .login-card {
       position: relative;
       z-index: 10;
@@ -43,8 +42,6 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       box-shadow: 0 24px 64px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-
-      /* ② Animation d'entrée */
       animation: cardIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
@@ -59,7 +56,6 @@
       gap: 10px;
       margin-bottom: 32px;
     }
-
     .login-logo-mark {
       width: 30px;
       height: 30px;
@@ -70,14 +66,12 @@
       justify-content: center;
       flex-shrink: 0;
     }
-
     .login-logo-text {
       font-size: 15px;
       font-weight: 700;
       color: #0A0A0A;
       letter-spacing: -0.01em;
     }
-
     .login-title {
       font-size: 20px;
       font-weight: 700;
@@ -85,13 +79,13 @@
       margin-bottom: 4px;
       letter-spacing: -0.02em;
     }
-
     .login-subtitle {
       font-size: 12.5px;
       color: #999;
       margin-bottom: 28px;
     }
 
+    /* ── Alertes ── */
     .login-error {
       background: var(--red-light);
       border: 1px solid #FCA5A5;
@@ -105,15 +99,12 @@
       gap: 8px;
     }
 
-    /* ── ⑤ Floating labels ── */
+    /* ── Floating labels ── */
     .float-group {
       position: relative;
       margin-bottom: 14px;
     }
-
-    .float-group.mb-large {
-      margin-bottom: 24px;
-    }
+    .float-group.mb-large { margin-bottom: 24px; }
 
     .float-input {
       width: 100%;
@@ -127,16 +118,11 @@
       outline: none;
       transition: all 0.15s;
     }
-
-    .float-input.has-icon {
-      padding-right: 40px;
-    }
-
+    .float-input.has-icon { padding-right: 40px; }
     .float-input:focus {
       border-color: #0A0A0A;
       box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
     }
-
     .float-label {
       position: absolute;
       left: 13px;
@@ -149,7 +135,6 @@
       transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
       transform-origin: left center;
     }
-
     .float-input:focus ~ .float-label,
     .float-input:not(:placeholder-shown) ~ .float-label {
       top: 9px;
@@ -175,11 +160,10 @@
       transition: color 0.15s;
       border-radius: 4px;
     }
-
     .eye-btn:hover { color: #0A0A0A; }
     .eye-btn svg { display: block; }
 
-    /* ── Bouton ── */
+    /* ── Bouton connexion ── */
     .btn-login {
       width: 100%;
       padding: 12px;
@@ -193,9 +177,133 @@
       cursor: pointer;
       transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s;
     }
-
     .btn-login:hover  { transform: scale(1.03); background: #222; }
     .btn-login:active { transform: scale(0.98); }
+
+    /* ── Option C : footer discret ── */
+    .login-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #F0F0EC;
+      text-align: center;
+      font-size: 12px;
+      color: #CCC;
+      line-height: 1.5;
+    }
+    .login-footer a {
+      color: #AAA;
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px solid #E0E0DC;
+      padding-bottom: 1px;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .login-footer a:hover { color: #0A0A0A; border-color: #0A0A0A; }
+
+    /* ── Succès demande envoyée ── */
+    .access-success {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #F0F0EC;
+      text-align: center;
+      font-size: 12px;
+      color: #10B981;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* ══════════════════════════════════════
+       MODAL DEMANDE D'ACCÈS
+    ══════════════════════════════════════ */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal {
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 360px;
+      margin: 16px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .modal-backdrop.open .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0A0A0A;
+      letter-spacing: -0.02em;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #CCC;
+      padding: 2px;
+      border-radius: 4px;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    .modal-close:hover { color: #0A0A0A; }
+
+    .modal-sub {
+      font-size: 12.5px;
+      color: #999;
+      margin-bottom: 22px;
+    }
+
+    .modal .float-input:focus {
+      border-color: #0A0A0A;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-modal-submit {
+      width: 100%;
+      padding: 11px;
+      background: #0A0A0A;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s;
+    }
+    .btn-modal-submit:hover  { transform: scale(1.02); background: #222; }
+    .btn-modal-submit:active { transform: scale(0.98); }
 
     @media (max-width: 480px) {
       .login-card { margin: 16px; padding: 28px 24px; }
@@ -206,6 +314,7 @@
 
   <canvas id="bg"></canvas>
 
+  <!-- ── Carte login ── -->
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-mark">
@@ -228,31 +337,12 @@
     {% endif %}
 
     <form method="POST" action="/login">
-
-      <!-- Email -->
       <div class="float-group">
-        <input
-          class="float-input"
-          type="email"
-          id="email"
-          name="email"
-          placeholder=" "
-          required
-          autofocus
-        />
+        <input class="float-input" type="email" id="email" name="email" placeholder=" " required autofocus />
         <label class="float-label" for="email">Email</label>
       </div>
-
-      <!-- Mot de passe -->
       <div class="float-group mb-large">
-        <input
-          class="float-input has-icon"
-          type="password"
-          id="password"
-          name="password"
-          placeholder=" "
-          required
-        />
+        <input class="float-input has-icon" type="password" id="password" name="password" placeholder=" " required />
         <label class="float-label" for="password">Mot de passe</label>
         <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePassword()" aria-label="Afficher le mot de passe">
           <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -262,25 +352,69 @@
           </svg>
         </button>
       </div>
-
-      <button type="submit" class="btn-login">
-        Se connecter →
-      </button>
-
+      <button type="submit" class="btn-login">Se connecter →</button>
     </form>
+
+    <!-- Footer option C -->
+    {% if access_request_sent %}
+    <div class="access-success">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Demande envoyée, tu recevras une réponse par email.
+    </div>
+    {% else %}
+    <div class="login-footer">
+      Pas encore d'accès ? <a onclick="openModal()">Faire une demande</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── Modal demande d'accès ── -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="handleBackdropClick(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Demander un accès</div>
+        <button class="modal-close" onclick="closeModal()" aria-label="Fermer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-sub">Laisse tes coordonnées, tu recevras une réponse par email.</div>
+
+      <form method="POST" action="/request-access">
+        <div class="float-group">
+          <input class="float-input" type="text" id="req-name" name="name" placeholder=" " required />
+          <label class="float-label" for="req-name">Nom</label>
+        </div>
+        <div class="float-group" style="margin-bottom: 18px;">
+          <input class="float-input" type="email" id="req-email" name="email" placeholder=" " required />
+          <label class="float-label" for="req-email">Email</label>
+        </div>
+        <button type="submit" class="btn-modal-submit">Envoyer la demande →</button>
+      </form>
+    </div>
   </div>
 
   <script>
+    // ── Modal ────────────────────────────────────────────
+    function openModal() {
+      document.getElementById('modalBackdrop').classList.add('open');
+      setTimeout(() => document.getElementById('req-name').focus(), 200);
+    }
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.remove('open');
+    }
+    function handleBackdropClick(e) {
+      if (e.target === document.getElementById('modalBackdrop')) closeModal();
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
     // ── Toggle mot de passe ──────────────────────────────
     function togglePassword() {
-      const input  = document.getElementById('password');
-      const icon   = document.getElementById('eyeIcon');
-      const btn    = document.getElementById('eyeBtn');
-      const show   = input.type === 'password';
-
-      input.type = show ? 'text' : 'password';
+      const input = document.getElementById('password');
+      const icon  = document.getElementById('eyeIcon');
+      const btn   = document.getElementById('eyeBtn');
+      const show  = input.type === 'password';
+      input.type  = show ? 'text' : 'password';
       btn.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-
       icon.innerHTML = show
         ? `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`
         : `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
@@ -292,81 +426,56 @@
     const canvas = document.getElementById('bg');
     const ctx    = canvas.getContext('2d');
     let W, H, particles = [];
-    const N            = 80;
-    const CONNECT_DIST = 130;
+    const N = 80, CONNECT_DIST = 130;
     let mouse = { x: -999, y: -999 };
 
-    function resize() {
-      W = canvas.width  = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
-
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
     function mkParticle() {
-      return {
-        x:  Math.random() * W,
-        y:  Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        r:  Math.random() * 1.5 + 0.5,
-      };
+      return { x: Math.random()*W, y: Math.random()*H, vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4, r: Math.random()*1.5+.5 };
     }
-
-    function init() {
-      resize();
-      particles = Array.from({ length: N }, mkParticle);
-    }
+    function init() { resize(); particles = Array.from({length: N}, mkParticle); }
 
     function draw() {
       ctx.fillStyle = '#F5F5F2';
       ctx.fillRect(0, 0, W, H);
-
       for (let i = 0; i < N; i++) {
-        for (let j = i + 1; j < N; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const d  = Math.sqrt(dx * dx + dy * dy);
+        for (let j = i+1; j < N; j++) {
+          const dx = particles[i].x-particles[j].x, dy = particles[i].y-particles[j].y;
+          const d = Math.sqrt(dx*dx+dy*dy);
           if (d < CONNECT_DIST) {
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(0,0,0,${0.08 * (1 - d / CONNECT_DIST)})`;
+            ctx.strokeStyle = `rgba(0,0,0,${0.08*(1-d/CONNECT_DIST)})`;
             ctx.lineWidth = 0.6;
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();
           }
         }
-
-        const dx = particles[i].x - mouse.x;
-        const dy = particles[i].y - mouse.y;
-        const d  = Math.sqrt(dx * dx + dy * dy);
+        const dx = particles[i].x-mouse.x, dy = particles[i].y-mouse.y;
+        const d = Math.sqrt(dx*dx+dy*dy);
         if (d < 180) {
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(0,0,0,${0.2 * (1 - d / 180)})`;
+          ctx.strokeStyle = `rgba(0,0,0,${0.2*(1-d/180)})`;
           ctx.lineWidth = 0.7;
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(mouse.x, mouse.y);
           ctx.stroke();
         }
       }
-
       particles.forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.35)';
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
         p.x += p.vx; p.y += p.vy;
         if (p.x < 0 || p.x > W) p.vx *= -1;
         if (p.y < 0 || p.y > H) p.vy *= -1;
       });
-
       requestAnimationFrame(draw);
     }
 
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
     window.addEventListener('mouseleave', () => { mouse.x = -999; mouse.y = -999; });
-
-    init();
-    draw();
+    init(); draw();
   </script>
 
 </body>
