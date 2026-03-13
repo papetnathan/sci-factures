@@ -15,11 +15,6 @@ SIGNED_URL_EXPIRY = 60 * 60  # 1 heure
 
 
 def get_public_url(photo_path: str) -> str:
-    """
-    Retourne une URL signée temporaire (1h) pour accéder à un fichier privé.
-    Remplace l'ancienne URL publique permanente.
-    Si la génération échoue, retourne None plutôt que de planter.
-    """
     if not photo_path:
         return None
     try:
@@ -27,7 +22,13 @@ def get_public_url(photo_path: str) -> str:
             photo_path,
             SIGNED_URL_EXPIRY
         )
-        return result.get("signedURL") or result.get("signed_url")
+        # storage3 v2 retourne un objet avec attribut signed_url
+        if hasattr(result, 'signed_url'):
+            return result.signed_url
+        # fallback dict (anciennes versions)
+        if isinstance(result, dict):
+            return result.get("signedURL") or result.get("signed_url")
+        return None
     except Exception as e:
         print(f"Erreur génération signed URL pour {photo_path}: {e}")
         return None
